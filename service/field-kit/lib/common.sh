@@ -6,21 +6,11 @@ kit_root() {
 }
 
 package_root() {
-    local field_kit
-    field_kit="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
-    if [[ -f "${field_kit}/../install.sh" ]]; then
-        cd -- "${field_kit}/.." && pwd
-        return
-    fi
-    if [[ -f "/opt/pmt-system-debug/install.sh" ]]; then
-        echo "/opt/pmt-system-debug"
-        return
-    fi
-    cd -- "${field_kit}/.." && pwd
+    cd -- "$(dirname -- "${BASH_SOURCE[0]}")/../../.." && pwd
 }
 
 install_root() {
-    if [[ -f /opt/pmt-system-debug/pmt_bulk_capture.py ]]; then
+    if [[ -f /opt/pmt-system-debug/src/pmt_bulk_capture.py ]]; then
         echo "/opt/pmt-system-debug"
         return
     fi
@@ -38,7 +28,7 @@ exports_root() {
 delivery_output_root() {
     local root
     root="$(package_root)"
-    if [[ "${root}" != "/opt/pmt-system-debug" && -f "${root}/run.sh" ]]; then
+    if [[ "${root}" != "/opt/pmt-system-debug" && -f "${root}/service/run.sh" ]]; then
         echo "${root}/output"
         return
     fi

@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.4.3
+
+- Reorganize the repository into src, docs, service, scripts and tests.
+- Add a direct download link and a short capture workflow to the README.
+- Rename the release archive to pmt-raw-capture-0.4.3.tar.gz.
+- Remove the separate SHA checksum asset and setup step.
+- Keep CLI commands, raw bulk v1 and installed data directories unchanged.
+
 ## 0.4.2
 
 - Reject symbolic links in result export inputs, including the snapshots

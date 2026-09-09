@@ -1,15 +1,40 @@
 import os
 from pathlib import Path
+import re
 import shutil
 import subprocess
 import tempfile
 import unittest
 
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[1] / "service"
 
 
 class FieldKitTest(unittest.TestCase):
+    def test_documentation_links(self):
+        for path in [ROOT.parent / "README.md"] + list((ROOT.parent / "docs").glob("*.md")):
+            text = path.read_text(encoding="utf-8")
+            self.assertEqual(text.count("```") % 2, 0, str(path))
+            for target in re.findall(r"\]\(([^)]+)\)", text):
+                if "://" not in target:
+                    self.assertTrue((path.parent / target).is_file(), target)
+        for name in ("README.md", "docs/usage.md", "docs/development.md"):
+            self.assertNotIn("sha256", (ROOT.parent / name).read_text(encoding="utf-8").lower())
+
+    def test_service_package_paths(self):
+        result = subprocess.run(
+            ["bash", "-euc", 'source field-kit/lib/common.sh; package_root'],
+            cwd=ROOT, capture_output=True, text=True,
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(Path(result.stdout.strip()), ROOT.parent)
+        result = subprocess.run(
+            ["python3", "-c", "import runpy, sys; runpy.run_path(sys.argv[1])",
+             str(ROOT / "field-kit/lib/run_status.py")],
+            capture_output=True, text=True,
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+
     def test_existing_config_does_not_change_new_plan(self):
         script = '''
 source field-kit/lib/common.sh
@@ -73,7 +98,7 @@ apply_env_plan
                     self.assertIn("Usage:", result.stderr)
 
     def test_shell_syntax(self):
-        paths = list(ROOT.glob("*.sh")) + list((ROOT / "field-kit").rglob("*.sh")) + [ROOT / "pmt-capture"]
+        paths = list(ROOT.rglob("*.sh")) + list((ROOT.parent / "scripts").glob("*.sh")) + [ROOT.parent / "pmt-capture"]
         for path in paths:
             with self.subTest(path=path):
                 result = subprocess.run(["bash", "-n", str(path)], capture_output=True, text=True)

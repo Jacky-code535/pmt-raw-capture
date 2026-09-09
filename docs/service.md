@@ -1,14 +1,12 @@
-# 可选 systemd 菜单
+# systemd 部署
 
-版本 0.4.2。普通采集使用 [README 中的命令](../README.md)。只有希望在专用实验机安装
-后台服务并开机续采时，才使用这个菜单。
+适用版本：0.4.3。服务相关脚本位于 `service/`，以下命令均从工具包根目录执行。
+安装后代码位于 `/opt/pmt-system-debug`，任务保存在 `/var/lib/pmt-system-debug/results`。
 
-开机续采要求启动时 PMT sysfs 已可用；服务使用 `Restart=no`，不保证异常后自动恢复。
-普通 CLI 和服务任务不要同时操作同一个结果目录。首次使用先完成三份试采，
-再在获准的实验机验证停止、启动和重启行为。
+## 菜单
 
 ```bash
-sudo ./run.sh
+sudo ./service/run.sh
 ```
 
 需要 Linux、Python 3.7+、正在运行的 systemd、PMT sysfs 和 root 权限。
@@ -27,14 +25,14 @@ sudo ./run.sh
 也可以提供本次计划的环境变量，菜单仍会要求确认：
 
 ```bash
-sudo env PMT_ENDPOINT=lab-host PMT_INTERVAL_SECONDS=10 PMT_SAMPLES=3 ./run.sh
+sudo env PMT_ENDPOINT=lab-host PMT_INTERVAL_SECONDS=10 PMT_SAMPLES=3 ./service/run.sh
 ```
 
 `PMT_TOTAL_HOURS` 可代替份数，按间隔向上取整；不要同时设置冲突的计划。
 默认 60 秒、600 份约 10 小时，第一份后首尾跨度实际约 599 分钟。
 
 结果在 `/var/lib/pmt-system-debug/results/<run-id>`。包内菜单导出到包目录的 `output/`；
-从 `/opt/pmt-system-debug` 运行菜单时导出到 `/var/lib/pmt-system-debug/exports`。
+安装后的菜单入口为 `/opt/pmt-system-debug/service/run.sh`，导出到 `/var/lib/pmt-system-debug/exports`。
 同名归档不会覆盖，需要重复导出时使用 CLI 指定另一个输出目录。
 
 `COLLECTION STATUS` 是次数/程序状态，`VERIFICATION STATUS` 是独立文件校验状态。
@@ -42,7 +40,7 @@ sudo env PMT_ENDPOINT=lab-host PMT_INTERVAL_SECONDS=10 PMT_SAMPLES=3 ./run.sh
 
 ## 脚本用途
 
-以下脚本由 `run.sh` 菜单调用，均操作当前安装的服务任务，不操作 README 中的独立 CLI 任务。
+以下脚本位于 `service/field-kit/`，由菜单调用，管理当前安装的服务任务。
 
 | 脚本 | 用途 |
 | --- | --- |
@@ -56,11 +54,15 @@ sudo env PMT_ENDPOINT=lab-host PMT_INTERVAL_SECONDS=10 PMT_SAMPLES=3 ./run.sh
 需要直接安装服务时：
 
 ```bash
-sudo ./install.sh --endpoint lab-host --instance lab-host \
+sudo ./service/install.sh --endpoint lab-host --instance lab-host \
 	--run-id service-trial-001 --interval 10 --samples 3
 sudo systemctl status pmt-bulk-capture@lab-host.service
 ```
 
 直接管理该服务使用 `systemctl stop` / `systemctl start`，单元名均为
 `pmt-bulk-capture@lab-host.service`。`install.sh --no-start` 只安装，不启动或启用开机启动。
-卸载用 `sudo ./uninstall.sh`，确认后停止所有已安装的 PMT 服务并保留数据。
+卸载用 `sudo ./service/uninstall.sh`，确认后停止所有已安装的 PMT 服务并保留数据。
+
+开机启动要求 PMT sysfs 已就绪。服务使用 `Restart=no`，异常退出后需手动启动。
+升级前停止旧服务，避免服务和 CLI 同时操作同一任务。0.4.3 保留原安装位置和数据目录，
+已安装工具的菜单入口由 `/opt/pmt-system-debug/run.sh` 改为 `/opt/pmt-system-debug/service/run.sh`。

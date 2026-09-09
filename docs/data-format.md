@@ -11,7 +11,7 @@ common Redfish-style fields but is not a firmware-atomic Redfish snapshot.
 {
   "FormatVersion": "intel-pmt-local-bulk/v1",
   "Capture": {
-    "ToolVersion": "0.4.2",
+    "ToolVersion": "0.4.3",
     "RunId": "trial-001",
     "Endpoint": "lab-host",
     "Sequence": 1,

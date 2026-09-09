@@ -8,7 +8,7 @@ ConditionPathIsDirectory=/sys/class/intel_pmt
 [Service]
 Type=simple
 EnvironmentFile=/etc/pmt-system-debug/%i.conf
-ExecStart=/opt/pmt-system-debug/python3 /opt/pmt-system-debug/pmt_bulk_capture.py run \
+ExecStart=/opt/pmt-system-debug/python3 /opt/pmt-system-debug/src/pmt_bulk_capture.py run \
   --endpoint ${PMT_ENDPOINT} \
   --run-id ${PMT_RUN_ID} \
   --sysfs-root /sys/class/intel_pmt \

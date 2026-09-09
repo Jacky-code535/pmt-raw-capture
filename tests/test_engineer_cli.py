@@ -9,6 +9,7 @@ import tarfile
 import unittest
 from unittest import mock
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 import pmt_capture_cli as cli
 import pmt_bulk_capture as capture
 import test_pmt_bulk_capture as fixtures
@@ -95,16 +96,16 @@ class EngineerCliTest(unittest.TestCase):
                 self.assertIn("path to one" if command == "dump" else "existing run directory", output.getvalue())
 
     def test_release_version_consistency(self):
-        root = Path(cli.__file__).resolve().parent
+        root = Path(cli.__file__).resolve().parents[1]
         version = (root / "VERSION").read_text().strip()
         self.assertEqual(capture.TOOL_VERSION, version)
-        for name in ("README.md", "DATA-FORMAT.md", "PUBLISHING.md",
-                     "field-kit/USER-GUIDE.zh-CN.md", "CHANGELOG.md"):
+        for name in ("README.md", "docs/data-format.md", "docs/development.md",
+                 "docs/service.md", "docs/changelog.md"):
             with self.subTest(document=name):
                 self.assertIn(version, (root / name).read_text(encoding="utf-8"))
 
     def test_shell_entrypoint_workflow(self):
-        entrypoint = Path(cli.__file__).resolve().parent / "pmt-capture"
+        entrypoint = Path(cli.__file__).resolve().parents[1] / "pmt-capture"
 
         def invoke(*arguments):
             result = subprocess.run(

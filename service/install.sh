@@ -2,6 +2,7 @@
 set -euo pipefail
 
 readonly SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+readonly PACKAGE_ROOT="$(cd -- "${SCRIPT_DIR}/.." && pwd)"
 ENDPOINT=""
 INSTANCE=""
 RUN_ID=""
@@ -106,7 +107,7 @@ active_units="$(systemctl list-units 'pmt-bulk-capture@*.service' --state=active
 [[ -z "${active_units}" ]] || die "stop active PMT services before installing or changing a task"
 
 EXPECTED_AGGREGATORS="$(
-    "${PYTHON_BIN}" "${SCRIPT_DIR}/pmt_bulk_capture.py" inventory \
+    "${PYTHON_BIN}" "${PACKAGE_ROOT}/src/pmt_bulk_capture.py" inventory \
         --sysfs-root /sys/class/intel_pmt |
         "${PYTHON_BIN}" -c 'import json,sys; print(len(json.load(sys.stdin)))'
 )"
@@ -117,38 +118,15 @@ install -d -m 0755 /opt/pmt-system-debug
 install -d -m 0750 /etc/pmt-system-debug
 install -d -m 0750 "${OUTPUT_ROOT}"
 install -d -m 0750 /var/lib/pmt-system-debug/exports
-if [[ "${SCRIPT_DIR}" != "/opt/pmt-system-debug" ]]; then
-install -m 0755 \
-    "${SCRIPT_DIR}/pmt_bulk_capture.py" \
-    /opt/pmt-system-debug/pmt_bulk_capture.py
-install -m 0755 "${SCRIPT_DIR}/install.sh" /opt/pmt-system-debug/install.sh
-install -m 0755 "${SCRIPT_DIR}/pmt-capture" "${SCRIPT_DIR}/pmt_capture_cli.py" /opt/pmt-system-debug/
-install -d -m 0755 /opt/pmt-system-debug/systemd
-install -m 0644 "${SCRIPT_DIR}/systemd/pmt-bulk-capture@.service" /opt/pmt-system-debug/systemd/
+if [[ "${PACKAGE_ROOT}" != "/opt/pmt-system-debug" ]]; then
+    install -d -m 0755 /opt/pmt-system-debug/src /opt/pmt-system-debug/docs
+    install -m 0644 "${PACKAGE_ROOT}/src/"*.py /opt/pmt-system-debug/src/
+    install -m 0755 "${PACKAGE_ROOT}/pmt-capture" /opt/pmt-system-debug/
+    cp -a "${SCRIPT_DIR}" /opt/pmt-system-debug/
+    install -m 0644 "${PACKAGE_ROOT}/docs/"*.md /opt/pmt-system-debug/docs/
+    install -m 0644 "${PACKAGE_ROOT}/VERSION" "${PACKAGE_ROOT}/README.md" /opt/pmt-system-debug/
+fi
 ln -sfn "${PYTHON_BIN}" /opt/pmt-system-debug/python3
-if [[ -f "${SCRIPT_DIR}/run.sh" ]]; then
-    install -m 0755 "${SCRIPT_DIR}/run.sh" /opt/pmt-system-debug/run.sh
-fi
-if [[ -f "${SCRIPT_DIR}/uninstall.sh" ]]; then
-    install -m 0755 "${SCRIPT_DIR}/uninstall.sh" /opt/pmt-system-debug/uninstall.sh
-fi
-if [[ -d "${SCRIPT_DIR}/field-kit" ]]; then
-    rm -rf /opt/pmt-system-debug/field-kit
-    cp -a "${SCRIPT_DIR}/field-kit" /opt/pmt-system-debug/field-kit
-    chmod 0755 /opt/pmt-system-debug/field-kit/*.sh
-    chmod 0755 /opt/pmt-system-debug/field-kit/lib/common.sh 2>/dev/null || true
-    chmod 0755 /opt/pmt-system-debug/field-kit/lib/schedule.sh 2>/dev/null || true
-    if [[ -f /opt/pmt-system-debug/field-kit/desktop/pmt-start-capture.desktop ]]; then
-        install -d -m 0755 /usr/share/applications
-        install -m 0644 \
-            /opt/pmt-system-debug/field-kit/desktop/pmt-start-capture.desktop \
-            /usr/share/applications/pmt-start-capture.desktop
-    fi
-fi
-for document in VERSION README.md DATA-FORMAT.md PUBLISHING.md CHANGELOG.md; do
-    install -m 0644 "${SCRIPT_DIR}/${document}" "/opt/pmt-system-debug/${document}"
-done
-    fi
 install -m 0644 \
     "${SCRIPT_DIR}/systemd/pmt-bulk-capture@.service" \
     /etc/systemd/system/pmt-bulk-capture@.service

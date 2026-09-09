@@ -11,7 +11,7 @@ require_root
 check_prerequisites
 
 ROOT="$(package_root)"
-if [[ ! -f "${ROOT}/install.sh" ]]; then
+if [[ ! -f "${ROOT}/service/install.sh" ]]; then
     say_err "找不到安装脚本 install.sh（当前包目录: ${ROOT}）"
     exit 1
 fi
@@ -76,7 +76,7 @@ if [[ ! "${confirm}" =~ ^[Yy]$ ]]; then
 fi
 
 say ""
-"${ROOT}/install.sh" \
+"${ROOT}/service/install.sh" \
     --endpoint "${ENDPOINT}" \
     --interval "${PMT_PLAN_INTERVAL}" \
     --samples "${PMT_PLAN_SAMPLES}"

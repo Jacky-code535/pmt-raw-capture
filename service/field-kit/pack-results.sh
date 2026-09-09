@@ -18,14 +18,14 @@ if service_is_active "${PMT_ACTIVE_INSTANCE}"; then
 fi
 
 options=()
-if ! python3 "$(package_root)/pmt_capture_cli.py" verify --run-dir "${PMT_ACTIVE_RUN_DIR}"; then
+if ! python3 "$(package_root)/src/pmt_capture_cli.py" verify --run-dir "${PMT_ACTIVE_RUN_DIR}"; then
     read -r -p "校验未通过，仍导出诊断数据？[y/N]: " force
     [[ "${force:-N}" =~ ^[Yy]$ ]] || exit 1
     options+=(--allow-partial)
 fi
 
 out_dir="$(delivery_output_root)"
-archive="$(python3 "$(package_root)/pmt_capture_cli.py" pack \
+archive="$(python3 "$(package_root)/src/pmt_capture_cli.py" pack \
     --run-dir "${PMT_ACTIVE_RUN_DIR}" --output "${out_dir}" "${options[@]}")"
 if [[ -n "${SUDO_USER:-}" && "${SUDO_USER}" != "root" ]]; then
     chown "${SUDO_USER}" "${out_dir}" "${archive}"
@@ -34,4 +34,4 @@ say ""
 say "=== 打包完成 ==="
 say "${archive}"
 say ""
-say "请将此文件发给分析同事，并附上 field-kit/USER-GUIDE.zh-CN.md。"
+say "结果包: ${archive}"

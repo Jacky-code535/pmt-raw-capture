@@ -18,12 +18,9 @@ jobs:
         run: sudo "$(command -v python3)" -m unittest discover -s tests -p test_field_kit.py -v
       - name: Test extracted distribution
         run: |
-          ./build-package.sh
-          pushd dist
-          sha256sum -c pmt-system-debug-$(tr -d '[:space:]' < ../VERSION).tar.gz.sha256
-          popd
+          ./scripts/build-package.sh
           mkdir -p "$RUNNER_TEMP/pmt-release"
-          tar -xzf dist/pmt-system-debug-$(tr -d '[:space:]' < VERSION).tar.gz -C "$RUNNER_TEMP/pmt-release"
-          cd "$RUNNER_TEMP/pmt-release"/pmt-system-debug-*
+          tar -xzf dist/pmt-raw-capture-$(tr -d '[:space:]' < VERSION).tar.gz -C "$RUNNER_TEMP/pmt-release"
+          cd "$RUNNER_TEMP/pmt-release"/pmt-raw-capture-*
           ./pmt-capture --version
           python3 -m unittest discover -s tests -v

@@ -28,7 +28,7 @@ from typing import Any, Dict, Iterable, List, Optional, Tuple
 
 
 FORMAT_VERSION = "intel-pmt-local-bulk/v1"
-TOOL_VERSION = "0.4.2"
+TOOL_VERSION = "0.4.3"
 DEFAULT_SYSFS = Path("/sys/class/intel_pmt")
 DEFAULT_OUTPUT_ROOT = Path("./results")
 PMT_ENTRY = re.compile(r"^telem([0-9]+)$")
