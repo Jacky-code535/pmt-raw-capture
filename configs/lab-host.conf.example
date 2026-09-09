@@ -1,0 +1,6 @@
+PMT_ENDPOINT=lab-host
+PMT_RUN_ID=service-trial-001
+PMT_OUTPUT_ROOT=/var/lib/pmt-system-debug/results
+PMT_EXPECTED_AGGREGATORS=1
+PMT_INTERVAL_SECONDS=60
+PMT_SAMPLES=3

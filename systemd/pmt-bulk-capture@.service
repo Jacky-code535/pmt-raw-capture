@@ -1,0 +1,37 @@
+[Unit]
+Description=SystemDebug raw Intel PMT bulk capture (%i)
+Documentation=file:/opt/pmt-system-debug/README.md
+After=local-fs.target systemd-modules-load.service time-sync.target
+Wants=time-sync.target
+ConditionPathIsDirectory=/sys/class/intel_pmt
+
+[Service]
+Type=simple
+EnvironmentFile=/etc/pmt-system-debug/%i.conf
+ExecStart=/opt/pmt-system-debug/python3 /opt/pmt-system-debug/pmt_bulk_capture.py run \
+  --endpoint ${PMT_ENDPOINT} \
+  --run-id ${PMT_RUN_ID} \
+  --sysfs-root /sys/class/intel_pmt \
+  --output-root ${PMT_OUTPUT_ROOT} \
+  --expected-aggregators ${PMT_EXPECTED_AGGREGATORS} \
+  --interval-seconds ${PMT_INTERVAL_SECONDS} \
+  --samples ${PMT_SAMPLES} \
+  --align-minute \
+  --resume
+Restart=no
+TimeoutStopSec=30s
+User=root
+Group=root
+UMask=0027
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=strict
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+ReadOnlyPaths=/sys/class/intel_pmt /opt/pmt-system-debug
+ReadWritePaths=/var/lib/pmt-system-debug
+
+[Install]
+WantedBy=multi-user.target
