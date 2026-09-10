@@ -27,7 +27,7 @@ sudo ./pmt-capture start --endpoint lab-host --run-id trial-001 \
   --interval 10 --samples 3
 ```
 
-第一份立即采集，约 20 秒完成。数据保存在 `results/trial-001/`。
+三份快照分别在约第 0、10、20 秒开始采集。整个任务耗时约 20 秒加上最后一份的读写时间；单份采集耗时见输出中的 `duration_ms`。数据保存在 `results/trial-001/`。
 
 检查并打包结果：
 
