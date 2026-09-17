@@ -22,6 +22,7 @@ inventory -> capture -> verify/pack -> unpack -> validate-platform -> analyze
 | snapshot SHA-256 | 0.6.0 完成 | 修改文件后 `verify` 必须失败 |
 | Data Quality | 0.6.0 完成 | `data-quality.csv` 与 series 对账 |
 | GNR 硬件资格边界 | 0.6.0 固化 | 见兼容性与资格记录 |
+| Full Bundle 可复现入口 | 0.6.1 完成 | 根目录 requirement、checksum、README 闭环 |
 | SHC adapter | 预留 | 不影响当前采集和分析 |
 
 GNR 支持仅指[兼容性](compatibility.md)中列出的已验证 inventory。registry 中存在其他 GNR mapping 不等于已经通过硬件资格测试。

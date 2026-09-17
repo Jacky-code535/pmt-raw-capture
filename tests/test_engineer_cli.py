@@ -4,6 +4,7 @@ import json
 import os
 from pathlib import Path
 import selectors
+import stat
 import subprocess
 import sys
 import tarfile
@@ -39,9 +40,18 @@ class EngineerCliTest(unittest.TestCase):
             self.assertEqual(cli.main(["pack", "--run-dir", str(run_dir), "--output", str(self.root / "export")]), 0)
         self.assertEqual(cli.status_report(run_dir)["verification"], "passed")
         archive = next((self.root / "export").glob("*.tar.gz"))
+        self.assertEqual(stat.S_IMODE(archive.stat().st_mode), 0o640)
         with tarfile.open(archive) as bundle:
             self.assertIn("cli/collector.log", bundle.getnames())
             self.assertEqual(len([name for name in bundle.getnames() if "/snapshots/" in name]), 3)
+
+    def test_sudo_pack_returns_archive_to_calling_user(self):
+        run_dir = self.start("sudo-pack")
+        environment = {"SUDO_UID": "1000", "SUDO_GID": "1001"}
+        with mock.patch.dict(os.environ, environment), mock.patch.object(os, "fchown") as change_owner:
+            with contextlib.redirect_stdout(io.StringIO()):
+                self.assertEqual(cli.pack_run(run_dir, self.root / "sudo-export", False), 0)
+        change_owner.assert_called_once_with(mock.ANY, 1000, 1001)
 
     def test_recover_orphan_snapshot(self):
         run_dir = self.start()

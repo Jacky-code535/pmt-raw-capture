@@ -1,6 +1,6 @@
 # Development
 
-Current release: 0.6.0 GNR Edition.
+Current release: 0.6.1 GNR Edition.
 
 ## Tests
 
@@ -20,9 +20,10 @@ and hardware qualification are separate platform tests.
 ./scripts/build-package.sh
 ```
 
-Output: `dist/pmt-raw-capture-0.6.0.tar.gz`. This source-only package omits platform data.
+Output: `dist/pmt-raw-capture-0.6.1.tar.gz`. This source-only package omits platform data.
 The approved release asset is built with `./scripts/build-full-package.sh`, which
-adds the fixed platform-data XML registry and replaces the archive with the full package.
+adds the fixed platform-data XML registry, replaces the archive with the full package,
+and writes the adjacent `.tar.gz.sha256` verification file.
 
 The archive uses the same layout as the repository. Its file list is defined in
 `scripts/build-package.sh`; new distributed files must be added there. Generated
@@ -32,8 +33,8 @@ Validate the extracted package:
 
 ```bash
 stage=$(mktemp -d)
-tar -xzf dist/pmt-raw-capture-0.6.0.tar.gz -C "$stage"
-cd "$stage/pmt-raw-capture-0.6.0"
+tar -xzf dist/pmt-raw-capture-0.6.1.tar.gz -C "$stage"
+cd "$stage/pmt-raw-capture-0.6.1"
 ./pmt-capture --version
 python3 -m unittest discover -s tests -v
 ```
@@ -43,7 +44,7 @@ python3 -m unittest discover -s tests -v
 1. Update `VERSION`, `TOOL_VERSION` and versioned documentation links.
 2. Run tests and build the package.
 3. Commit and push; wait for CI to pass.
-4. Create the version tag and GitHub Release, attaching the `.tar.gz` from `dist/`.
+4. Create the version tag and GitHub Release, attaching the `.tar.gz` and `.tar.gz.sha256` from `dist/`.
 5. Verify the README download link against the published asset.
 
 ## Distribution

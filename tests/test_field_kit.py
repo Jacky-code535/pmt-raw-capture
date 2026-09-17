@@ -12,14 +12,16 @@ ROOT = Path(__file__).resolve().parents[1] / "service"
 
 class FieldKitTest(unittest.TestCase):
     def test_documentation_links(self):
-        for path in [ROOT.parent / "README.md"] + list((ROOT.parent / "docs").glob("*.md")):
+        for path in [ROOT.parent / "README.md", ROOT.parent / "REQUIREMENTS.md"] + list((ROOT.parent / "docs").glob("*.md")):
             text = path.read_text(encoding="utf-8")
             self.assertEqual(text.count("```") % 2, 0, str(path))
             for target in re.findall(r"\]\(([^)]+)\)", text):
                 if "://" not in target:
                     self.assertTrue((path.parent / target).is_file(), target)
-        for name in ("README.md", "docs/usage.md", "docs/development.md"):
-            self.assertNotIn("sha256", (ROOT.parent / name).read_text(encoding="utf-8").lower())
+        readme = (ROOT.parent / "README.md").read_text(encoding="utf-8")
+        self.assertIn("REQUIREMENTS.md", readme)
+        self.assertIn("Full Bundle", readme)
+        self.assertIn("sha256sum -c", readme)
 
     def test_service_package_paths(self):
         result = subprocess.run(

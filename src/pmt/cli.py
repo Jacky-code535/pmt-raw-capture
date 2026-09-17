@@ -181,6 +181,11 @@ def pack_run(run_dir: Path, output_dir: Path, allow_partial: bool) -> int:
         if archive.exists():
             raise FileExistsError(f"archive already exists: {archive}; choose another output directory")
         descriptor, temporary_name = tempfile.mkstemp(dir=str(output_dir), suffix=".tmp")
+        os.fchmod(descriptor, 0o640)
+        sudo_uid = os.environ.get("SUDO_UID")
+        sudo_gid = os.environ.get("SUDO_GID")
+        if sudo_uid is not None and sudo_gid is not None:
+            os.fchown(descriptor, int(sudo_uid), int(sudo_gid))
         os.close(descriptor)
         temporary = Path(temporary_name)
         try:

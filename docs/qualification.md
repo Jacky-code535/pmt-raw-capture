@@ -1,5 +1,26 @@
 # Hardware Qualification
 
+## v0.6.1 README and Permission Verification
+
+The v0.6.1 Full Bundle workflow was exercised on AVC01 with separate privilege
+contexts. User `intel` extracted and smoke-tested the package, root performed the
+PMT operations with the sudo caller identity, and `intel` then unpacked, validated
+and analyzed the result without elevated privileges.
+
+| Check | Result |
+| --- | --- |
+| Download checksum file | Pass |
+| Full Bundle XML presence and smoke | Pass; 2/2 tests |
+| Capture completeness | 3/3 snapshots; 36/36 regions each |
+| Sudo pack handoff | `0640 intel:intel`; readable by caller |
+| XML matching | 7/7 observed GUID + Size schemas valid |
+| Data Quality | 32,098 series; all had 3 valid, 0 invalid and 0 missing values |
+| Non-root unpack and analysis | Pass |
+
+This verifies the README's same-host path and closes the root-owned `0600` archive
+problem present in v0.6.0. A source checkout remains source-only and requires an
+explicit `--metadata` path; only the Full Bundle supplies the default registry.
+
 ## v0.6.0 GNR Edition Release Verification
 
 The v0.6.0 final release Full Bundle was transferred to AVC01 and exercised using

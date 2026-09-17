@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.6.1 (2026-09-17)
+
+- Add a root requirement and acceptance index linked directly from the README.
+- Replace the ambiguous quick start with an exact Full Bundle download-to-analysis workflow.
+- Distinguish source-only checkout behavior from the bundled XML release behavior.
+- Return sudo-generated result archives to the invoking user with mode 0640.
+- Publish a separate archive SHA-256 file for download verification.
+
 ## 0.6.0 (2026-09-17)
 
 - Rename the product to Intel PMT Capture and Analysis Toolkit while retaining compatible repository, archive and CLI names.

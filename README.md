@@ -2,34 +2,90 @@
 
 面向 GNR Linux 主机的 Intel PMT **采集、打包、解包、XML 解码和统计工具**。现场只读 raw telemetry，离线使用内置 Python 解码器生成时间序列、统计摘要和数据质量表。运行依赖 Python 3.7+，无需 pip 包或 Go 可执行文件。
 
-当前版本为 **0.6.0 GNR Edition**。发布包内置固定版本的已批准 Intel PMT XML registry；`validate-platform` 和 `analyze` 默认自动使用它，也可用 `--metadata` 覆盖。正式硬件资格范围见 [GNR 兼容性](docs/compatibility.md)。
+当前版本为 **0.6.1 GNR Edition**。发布包内置固定版本的已批准 Intel PMT XML registry；`validate-platform` 和 `analyze` 默认自动使用它，也可用 `--metadata` 覆盖。
 
-**[下载完整工具包 v0.6.0](https://github.com/Jacky-code535/pmt-raw-capture/releases/download/v0.6.0/pmt-raw-capture-0.6.0.tar.gz)**
+项目入口：[需求与验收](REQUIREMENTS.md) · [GNR 兼容性](docs/compatibility.md) · [实施计划](docs/gnr-plan.md) · [已知限制](docs/qualification.md)
 
-## 完整工具快速开始
+## 先选择正确的下载文件
 
-下载并解压后，先在 GNR 主机完成三次短采集，再离线分析：
+普通使用者必须下载 **Release Full Bundle**，不要使用 GitHub 自动生成的 `Source code (zip/tar.gz)`，也不要直接 `git clone` 后照下面的无参数 XML 命令运行。源码仓库不提交 platform XML；Full Bundle 才包含 `bundled-platform-data/xml/pmt.xml`。
+
+- [下载 v0.6.1 Full Bundle](https://github.com/Jacky-code535/pmt-raw-capture/releases/download/v0.6.1/pmt-raw-capture-0.6.1.tar.gz)
+- [下载 SHA-256 文件](https://github.com/Jacky-code535/pmt-raw-capture/releases/download/v0.6.1/pmt-raw-capture-0.6.1.tar.gz.sha256)
+
+在 GNR 主机上从一个新目录开始：
 
 ```bash
-# 可选：先检查工具，不需要 PMT 硬件或 root
+mkdir -p "$HOME/pmt-0.6.1"
+cd "$HOME/pmt-0.6.1"
+
+curl -fL -O https://github.com/Jacky-code535/pmt-raw-capture/releases/download/v0.6.1/pmt-raw-capture-0.6.1.tar.gz
+curl -fL -O https://github.com/Jacky-code535/pmt-raw-capture/releases/download/v0.6.1/pmt-raw-capture-0.6.1.tar.gz.sha256
+sha256sum -c pmt-raw-capture-0.6.1.tar.gz.sha256
+tar -xzf pmt-raw-capture-0.6.1.tar.gz
+cd pmt-raw-capture-0.6.1
+
+./pmt-capture --version
+test -f bundled-platform-data/xml/pmt.xml
 bash scripts/smoke_test.sh
-
-# GNR 主机：发现设备并采集三次
-sudo ./pmt-capture inventory
-sudo ./pmt-capture start --endpoint gnr-host --platform GNR \
-  --run-id gnr-smoke-001 --interval 2 --samples 3
-sudo ./pmt-capture pack --run-dir results/gnr-smoke-001 --output packages
-
-# 同一主机或分析机：解包、检查 XML 覆盖并分析
-./pmt-capture unpack packages/pmt-capture-gnr-smoke-001.tar.gz --output replay
-./pmt-capture validate-platform --run-dir replay/gnr-smoke-001
-./pmt-capture analyze --run-dir replay/gnr-smoke-001 \
-  --output analysis/gnr-smoke-001
 ```
 
-采集权限不足时，只对采集命令使用 `sudo`。操作者决定何时执行 `start`，用 `--interval` 控制相邻样本的计划启动间隔，用 `--samples` 控制计划样本数，并可随时执行 `stop`。配置采用 JSON；路径相对于配置文件目录解析，命令行显式值优先。不自动加载默认配置，输出目录和 run ID 不可复用。平台匹配使用精确 **GUID + Size**，不是根据机器标签猜测。XML 要求见[平台数据](docs/platform-data.md)，完整命令和输出见[离线工作流](docs/offline.md)。
+预期：版本输出 `0.6.1`，`test` 没有报错，smoke 显示 `Ran 2 tests` 和 `OK`。若没有 `curl`，可从 Release 页面下载两个文件后从 `sha256sum` 开始。
 
-下载后将压缩包放到被测主机。仓库名和压缩包名继续保留 `pmt-raw-capture`，避免破坏已有链接和脚本；产品能力已经覆盖完整采集与离线分析。历史版本见 [Releases](https://github.com/Jacky-code535/pmt-raw-capture/releases)。
+## GNR 三样本完整复现
+
+以下命令在**同一台 GNR 主机**完成采集和分析，先排除跨机器传输与权限变量：
+
+```bash
+cd "$HOME/pmt-0.6.1/pmt-raw-capture-0.6.1"
+RUN_ID="gnr-smoke-$(date -u +%Y%m%dT%H%M%SZ)"
+ENDPOINT="gnr-host"
+
+# 1. 发现 PMT 区域；同时保存 inventory 便于问题反馈
+sudo ./pmt-capture inventory | tee "inventory-$RUN_ID.json"
+
+# 2. 每隔 2 秒采集一份，共 3 份
+sudo ./pmt-capture start --endpoint "$ENDPOINT" --platform GNR \
+  --run-id "$RUN_ID" --interval 2 --samples 3
+
+# 3. 检查并打包；sudo pack 会把归档所有权交还给当前登录用户
+sudo ./pmt-capture verify --run-dir "results/$RUN_ID"
+sudo ./pmt-capture pack --run-dir "results/$RUN_ID" --output packages
+ARCHIVE="packages/pmt-capture-$RUN_ID.tar.gz"
+test -r "$ARCHIVE"
+
+# 4. 用 Full Bundle 内置 XML 解包、验证并分析
+REPLAY="replay-$RUN_ID"
+ANALYSIS="analysis-$RUN_ID"
+./pmt-capture unpack "$ARCHIVE" --output "$REPLAY"
+./pmt-capture validate-platform --run-dir "$REPLAY/$RUN_ID" \
+  | tee "validation-$RUN_ID.json"
+./pmt-capture analyze --run-dir "$REPLAY/$RUN_ID" --output "$ANALYSIS"
+
+# 5. 检查四个核心输出非空
+test -s "$ANALYSIS/decoded.csv"
+test -s "$ANALYSIS/series.csv"
+test -s "$ANALYSIS/summary.csv"
+test -s "$ANALYSIS/data-quality.csv"
+printf 'PASS: %s\n' "$ANALYSIS"
+```
+
+采集期间应看到三行 `"complete":true`。`verify` 应显示 `AllObservedFilesValid: true` 和 `RequestedSampleCountReached: true`；`validate-platform` 应显示 `mapping_valid: true` 和 `valid: true`；最后应打印 `PASS`。不同 GNR inventory 的 decoded 行数可能不同，不应硬编码为 AVC01 的行数。
+
+如果失败，保留 `inventory-*.json`、`validation-*.json`、`results/<run-id>/collector.log` 和终端错误。不要用相近 GUID 的 XML 代替精确映射。常见问题见[使用指南](docs/usage.md)。
+
+## 源码开发者
+
+`git clone` 得到的是 source-only checkout。运行 XML 命令时必须显式提供完整 registry：
+
+```bash
+./pmt-capture validate-platform --run-dir results/<run-id> \
+  --metadata /approved/platform-data/xml/pmt.xml
+./pmt-capture analyze --run-dir results/<run-id> \
+  --metadata /approved/platform-data/xml/pmt.xml --output analysis/<run-id>
+```
+
+仓库名和压缩包名继续保留 `pmt-raw-capture`，避免破坏已有链接和脚本。历史版本见 [Releases](https://github.com/Jacky-code535/pmt-raw-capture/releases)。
 
 ## 开始采集
 
@@ -38,8 +94,8 @@ sudo ./pmt-capture pack --run-dir results/gnr-smoke-001 --output packages
 解压并查看 PMT 设备：
 
 ```bash
-tar -xzf pmt-raw-capture-0.6.0.tar.gz
-cd pmt-raw-capture-0.6.0
+tar -xzf pmt-raw-capture-0.6.1.tar.gz
+cd pmt-raw-capture-0.6.1
 sudo ./pmt-capture inventory
 ```
 
