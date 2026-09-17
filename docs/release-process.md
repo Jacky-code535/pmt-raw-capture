@@ -1,7 +1,7 @@
 # Release Process
 
-Version 0.5.0-dev is a public development preview. The latest packaged release
-remains v0.4.3 until the full-tool release gates and review are complete.
+Version 0.5.0 is the current packaged release. Its representative hardware
+qualification is recorded in [qualification](qualification.md).
 
 ## Local Gates
 
@@ -9,8 +9,8 @@ remains v0.4.3 until the full-tool release gates and review are complete.
 python3 -m unittest discover -s tests -v
 bash scripts/build-package.sh
 stage=$(mktemp -d)
-tar -xzf dist/pmt-raw-capture-0.5.0-dev.tar.gz -C "$stage"
-cd "$stage/pmt-raw-capture-0.5.0-dev"
+tar -xzf dist/pmt-raw-capture-0.5.0.tar.gz -C "$stage"
+cd "$stage/pmt-raw-capture-0.5.0"
 python3 -m unittest discover -s tests -v
 bash scripts/smoke_test.sh
 ```
@@ -19,9 +19,10 @@ Review the tar member list: no platform XML, measurement scripts, run results,
 caches, credentials, private repository references or EDP source files. Only original
 synthetic XML fixtures are included.
 
-CI uses synthetic data and does not initialize the private submodule. The manual
-package workflow validates and stores a tool-only workflow artifact; it does not
-create a GitHub Release. Local hardware replay evidence stays outside this repository.
+CI uses synthetic data. The manual package workflow validates and stores a tool-only
+workflow artifact; GitHub Releases are created separately after the gates pass.
+Raw hardware data and platform XML stay outside this repository; only a sanitized
+qualification summary is published.
 
 ## Approved Publication
 

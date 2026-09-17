@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.5.0-dev (Local Preview)
+## 0.5.0 (2026-09-17)
 
 - Persist logical CPU selection across background capture and resume.
 - Record DMI firmware facts, platform/XML labels and collector source identity.
@@ -10,7 +10,8 @@
 - Correct XML sqrt support, group-qualified counter identity and referenced-field layout resolution; separate file mapping checks from decode-schema validation.
 - Add experiment CSV alignment, explicit failure windows and matching-run comparisons.
 - Preserve known invalid decoded values separately from statistical inputs.
-- No new GitHub release or hardware overhead qualification.
+- Validate the packaged end-to-end workflow on the AVC01 GNR reference host: 30/30 complete snapshots, 36 regions per snapshot, seven exact XML schema matches and 962,940 valid decoded rows.
+- Publish the complete capture and analysis tool as the v0.5.0 release; platform XML remains separately supplied.
 
 ## 0.4.3
 

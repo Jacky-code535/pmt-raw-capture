@@ -25,7 +25,7 @@ files=(
     tests/test_pmt_analysis.py tests/test_pmt_postprocess.py
     tests/test_native_decode.py tests/test_unpack.py
     tests/test_integrated_workflow.py config/defaults.json examples/capture_config.json
-    scripts/smoke_test.sh docs/architecture.md docs/platform-data.md docs/release-process.md
+    scripts/smoke_test.sh docs/architecture.md docs/platform-data.md docs/qualification.md docs/release-process.md
     RELEASE_NOTES.md .github/workflows/release.yml
 )
 while IFS= read -r -d '' file; do

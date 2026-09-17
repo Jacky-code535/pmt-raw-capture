@@ -1,6 +1,6 @@
 # Development
 
-Current source: 0.5.0-dev, a local preview. The published release remains v0.4.3.
+Current release: 0.5.0.
 
 ## Tests
 
@@ -20,7 +20,7 @@ and hardware qualification are separate platform tests.
 ./scripts/build-package.sh
 ```
 
-Output: `dist/pmt-raw-capture-0.5.0-dev.tar.gz`.
+Output: `dist/pmt-raw-capture-0.5.0.tar.gz`.
 
 The archive uses the same layout as the repository. Its file list is defined in
 `scripts/build-package.sh`; new distributed files must be added there. Generated
@@ -30,8 +30,8 @@ Validate the extracted package:
 
 ```bash
 stage=$(mktemp -d)
-tar -xzf dist/pmt-raw-capture-0.5.0-dev.tar.gz -C "$stage"
-cd "$stage/pmt-raw-capture-0.5.0-dev"
+tar -xzf dist/pmt-raw-capture-0.5.0.tar.gz -C "$stage"
+cd "$stage/pmt-raw-capture-0.5.0"
 ./pmt-capture --version
 python3 -m unittest discover -s tests -v
 ```
