@@ -1,5 +1,7 @@
 # Raw Bulk Format v1
 
+Collector source version: 0.5.0-dev (local preview). The raw v1 contract and older captures remain supported.
+
 `FormatVersion` is `intel-pmt-local-bulk/v1`. Each snapshot is UTF-8 JSON inside
 gzip. All numeric payload bytes are preserved, including sentinel values.
 There is no cryptographic integrity scheme. The `TelemetryData` envelope uses
@@ -76,8 +78,19 @@ other programs or users from changing files.
 1. Decompress all snapshots, order by Sequence, and retain the real time gaps.
 2. Check Capture.Complete and Errors before interpreting each sample.
 3. Match each region's GUID and Size to approved platform metadata.
-4. Base64-decode Data, then apply the external decoder's field layout and units.
+4. Base64-decode Data, then apply the XML-defined field layout, transformations and units using the built-in decoder.
 5. Retain metadata/decoder versions alongside the resulting time series.
 
 Changing only the decoder must not require recollecting raw data. Compatibility
 with a particular decoder must still be tested; this release contains no decoder.
+
+The preview adds `CollectorCPU`, `EffectiveCPUs`, `PlatformLabel`, `XMLVersionLabel`,
+`CollectorSourceSHA256`, `CollectorSourcesSHA256`, `Machine.DMI` and `PlannedSampleSpanSeconds` to new run metadata.
+DMI read failures are null; operator-supplied labels are not detected hardware facts.
+The legacy `ExpectedDurationSeconds` estimate remains unchanged for compatibility.
+
+`archive` creates a separate `pmt-offline-archive/v1` directory with per-sample raw
+binaries, original v1 snapshots, metadata and content fingerprints. It never replaces
+the original run. `analyze` uses each aggregator's `CapturedAt`, freezes the XML files
+needed by exact GUID+Size mappings, and records analyzer/decoder provenance. See the
+[offline workflow](offline.md) for output and statistical contracts.

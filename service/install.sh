@@ -121,6 +121,7 @@ install -d -m 0750 /var/lib/pmt-system-debug/exports
 if [[ "${PACKAGE_ROOT}" != "/opt/pmt-system-debug" ]]; then
     install -d -m 0755 /opt/pmt-system-debug/src /opt/pmt-system-debug/docs
     install -m 0644 "${PACKAGE_ROOT}/src/"*.py /opt/pmt-system-debug/src/
+    cp -a "${PACKAGE_ROOT}/src/pmt" /opt/pmt-system-debug/src/
     install -m 0755 "${PACKAGE_ROOT}/pmt-capture" /opt/pmt-system-debug/
     cp -a "${SCRIPT_DIR}" /opt/pmt-system-debug/
     install -m 0644 "${PACKAGE_ROOT}/docs/"*.md /opt/pmt-system-debug/docs/

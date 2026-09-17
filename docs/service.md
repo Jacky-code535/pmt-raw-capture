@@ -1,6 +1,6 @@
 # systemd 部署
 
-适用版本：0.4.3。服务相关脚本位于 `service/`，以下命令均从工具包根目录执行。
+适用版本：0.4.3；0.5.0-dev 沿用这些路径，尚未进行新的服务安装验证。服务相关脚本位于 `service/`，以下命令均从工具包根目录执行。
 安装后代码位于 `/opt/pmt-system-debug`，任务保存在 `/var/lib/pmt-system-debug/results`。
 
 ## 菜单

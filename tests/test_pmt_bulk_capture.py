@@ -93,6 +93,11 @@ class PmtBulkCaptureTest(unittest.TestCase):
         self.assertLessEqual(len(first["CollectionTimestamp"]), 10)
         self.assertEqual(first["attributes"]["AccessId"], "telem1")
         self.assertTrue(document["Capture"]["Complete"])
+        state = capture.load_json(self.output / "one" / "run.json")
+        self.assertIn("bios_version", state["Machine"]["DMI"])
+        self.assertEqual(len(state["CollectorSourceSHA256"]), 64)
+        self.assertIn("reader.py", state["CollectorSourcesSHA256"])
+        self.assertEqual(state["PlannedSampleSpanSeconds"], 0)
 
     def test_three_sample_run_verifies(self) -> None:
         with contextlib.redirect_stdout(io.StringIO()):

@@ -1,6 +1,7 @@
 import contextlib
 import io
 import json
+import os
 from pathlib import Path
 import selectors
 import subprocess
@@ -79,6 +80,16 @@ class EngineerCliTest(unittest.TestCase):
             cli.main(["start", "--endpoint", "test"])
         self.assertEqual(raised.exception.code, 2)
 
+    def test_xml_commands_require_explicit_metadata(self):
+        commands = (
+            ["validate-platform"],
+            ["analyze", "--run-dir", "run", "--output", "analysis"],
+        )
+        for command in commands:
+            with self.subTest(command=command[0]), contextlib.redirect_stderr(io.StringIO()), self.assertRaises(SystemExit) as raised:
+                cli.main(command)
+            self.assertEqual(raised.exception.code, 2)
+
     def test_command_help_explains_actions(self):
         parser = cli.build_parser()
         help_text = parser.format_help()
@@ -96,7 +107,7 @@ class EngineerCliTest(unittest.TestCase):
                 self.assertIn("path to one" if command == "dump" else "existing run directory", output.getvalue())
 
     def test_release_version_consistency(self):
-        root = Path(cli.__file__).resolve().parents[1]
+        root = Path(__file__).resolve().parents[1]
         version = (root / "VERSION").read_text().strip()
         self.assertEqual(capture.TOOL_VERSION, version)
         for name in ("README.md", "docs/data-format.md", "docs/development.md",
@@ -105,7 +116,7 @@ class EngineerCliTest(unittest.TestCase):
                 self.assertIn(version, (root / name).read_text(encoding="utf-8"))
 
     def test_shell_entrypoint_workflow(self):
-        entrypoint = Path(cli.__file__).resolve().parents[1] / "pmt-capture"
+        entrypoint = Path(__file__).resolve().parents[1] / "pmt-capture"
 
         def invoke(*arguments):
             result = subprocess.run(
@@ -143,6 +154,7 @@ class EngineerCliTest(unittest.TestCase):
         try:
             with mock.patch.object(cli.subprocess, "Popen", side_effect=spawn_process) as spawn:
                 args = self._args("background")
+                args.cpu = min(os.sched_getaffinity(0))
                 with contextlib.redirect_stdout(io.StringIO()):
                     cli.launch(args, True)
             self.assertIn("resume", spawn.call_args[0][0])
@@ -150,6 +162,9 @@ class EngineerCliTest(unittest.TestCase):
             self.assertEqual(processes[0].wait(timeout=5), 0)
             run_dir = self.output / "background"
             self.assertEqual(cli.status_report(run_dir)["collection"], "completed")
+            state = capture.load_json(run_dir / "run.json")
+            self.assertEqual(state["EffectiveCPUs"], [args.cpu])
+            self.assertEqual(cli.saved_args(run_dir).cpu, args.cpu)
             self.assertIn('"sequence":1', (run_dir / "console.log").read_text())
         finally:
             for process in processes:
@@ -158,6 +173,12 @@ class EngineerCliTest(unittest.TestCase):
                 process.wait()
 
     def test_process_stop_and_resume_saved_schedule(self):
+        allowed = os.sched_getaffinity(0)
+        args = self._args("invalid-cpu")
+        args.cpu = max(allowed) + 1
+        with self.assertRaisesRegex(ValueError, "cpuset"):
+            capture.run_capture(args)
+        self.assertEqual(os.sched_getaffinity(0), allowed)
         command = [sys.executable, str(Path(cli.__file__)), "start",
                    "--endpoint", "test-host", "--run-id", "process",
                    "--sysfs-root", str(self.sysfs), "--output-root", str(self.output),
@@ -170,7 +191,8 @@ class EngineerCliTest(unittest.TestCase):
             self.assertIn('"sequence":1', process.stdout.readline())
             run_dir = self.output / "process"
             with contextlib.redirect_stdout(io.StringIO()):
-                self.assertEqual(cli.stop_run(run_dir), 0)
+                self.assertEqual(cli.stop_run(run_dir, wait_seconds=5), 0)
+                self.assertFalse(cli.is_busy(run_dir))
             stdout, stderr = process.communicate(timeout=5)
             self.assertEqual(process.returncode, 0, stderr)
             self.assertEqual(cli.status_report(run_dir)["collection"], "stopped")

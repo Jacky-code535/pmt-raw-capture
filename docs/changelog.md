@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.5.0-dev (Local Preview)
+
+- Persist logical CPU selection across background capture and resume.
+- Record DMI firmware facts, platform/XML labels and collector source identity.
+- Add archival per-sample binaries while retaining replayable v1 snapshots.
+- Add built-in exact XML decoding, counter reconstruction, statistics and topology views; retain optional external decoder compatibility.
+- Add safe unpacking, explicit XML validation and JSON capture config.
+- Correct XML sqrt support, group-qualified counter identity and referenced-field layout resolution; separate file mapping checks from decode-schema validation.
+- Add experiment CSV alignment, explicit failure windows and matching-run comparisons.
+- Preserve known invalid decoded values separately from statistical inputs.
+- No new GitHub release or hardware overhead qualification.
+
 ## 0.4.3
 
 - Reorganize the repository into src, docs, service, scripts and tests.

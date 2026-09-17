@@ -1,0 +1,7 @@
+{
+  "endpoint": "lab-host",
+  "run_id": "trial-001",
+  "interval_seconds": 10,
+  "samples": 3,
+  "output_root": "../results"
+}

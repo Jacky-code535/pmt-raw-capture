@@ -1,0 +1,1 @@
+"""PMT capture components."""

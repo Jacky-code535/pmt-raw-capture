@@ -1,0 +1,25 @@
+name: Validate Tool Package
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  package:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - run: python3 -m unittest discover -s tests -v
+      - run: bash scripts/build-package.sh
+      - name: Test extracted package
+        run: |
+          mkdir -p "$RUNNER_TEMP/pmt-package"
+          tar -xzf dist/pmt-raw-capture-*.tar.gz -C "$RUNNER_TEMP/pmt-package"
+          cd "$RUNNER_TEMP/pmt-package"/pmt-raw-capture-*
+          python3 -m unittest discover -s tests -v
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pmt-tool-preview
+          path: dist/pmt-raw-capture-*.tar.gz
