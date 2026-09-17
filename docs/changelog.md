@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.5.1 (2026-09-17)
+
+- Bundle the complete approved Intel PMT XML registry from fixed platform-data commit `df82b1741dec619300707881114f6b17b5204f60`.
+- Default XML validation and analysis to the bundled registry while retaining explicit `--metadata` override support.
+- Add platform-data source provenance and SHA-256 verification for all 798 bundled files.
+
 ## 0.5.0 (2026-09-17)
 
 - Persist logical CPU selection across background capture and resume.

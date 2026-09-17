@@ -1,15 +1,19 @@
 # Platform XML
 
-The tool does not contain platform XML. Supply a compatible PMT registry and its referenced schema files as a local directory. Keep the relative paths used by the registry unchanged.
+The v0.5.1 Full Bundle contains the complete approved Intel PMT XML registry at
+platform-data commit `df82b1741dec619300707881114f6b17b5204f60`. Its license,
+source record and SHA-256 manifest are under `bundled-platform-data/`.
 
-Both XML commands require the registry explicitly:
+Both XML commands use the bundled registry by default:
 
 ```bash
-./pmt-capture validate-platform --run-dir results/trial-001 \
-  --metadata /path/to/xml/pmt.xml
+./pmt-capture validate-platform --run-dir results/trial-001
 ./pmt-capture analyze --run-dir results/trial-001 \
-  --metadata /path/to/xml/pmt.xml --output analysis/trial-001
+  --output analysis/trial-001
 ```
+
+Use `--metadata /path/to/xml/pmt.xml` to override the bundled registry. Keep all
+relative paths used by an override registry unchanged.
 
 The registry must contain an exact GUID and payload-size mapping for every PMT aggregator observed in the run. `validate-platform` reports two separate results:
 
@@ -36,4 +40,4 @@ Unsupported or incomplete definitions fail explicitly. Do not guess missing scal
 
 Analysis copies the registry and required schemas into `provenance/xml`, records their content hashes, and records a Git revision when the XML directory is a checkout. The content hashes remain authoritative when files are modified or supplied without Git.
 
-The analysis output therefore contains copies of the XML used. Treat its distribution according to the XML provider's terms. Platform XML, raw captures and generated analysis directories are intentionally excluded from this source package.
+The analysis output therefore contains copies of the XML used. Treat its distribution according to the XML provider's terms. Raw captures and generated analysis directories are excluded from the release package.

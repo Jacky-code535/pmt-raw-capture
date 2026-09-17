@@ -1,6 +1,6 @@
 # Development
 
-Current release: 0.5.0.
+Current release: 0.5.1 Full Bundle.
 
 ## Tests
 
@@ -20,7 +20,9 @@ and hardware qualification are separate platform tests.
 ./scripts/build-package.sh
 ```
 
-Output: `dist/pmt-raw-capture-0.5.0.tar.gz`.
+Output: `dist/pmt-raw-capture-0.5.1.tar.gz`. This source-only package omits platform data.
+The approved release asset is built with `./scripts/build-full-package.sh`, which
+adds the fixed platform-data XML registry and replaces the archive with the full package.
 
 The archive uses the same layout as the repository. Its file list is defined in
 `scripts/build-package.sh`; new distributed files must be added there. Generated
@@ -30,8 +32,8 @@ Validate the extracted package:
 
 ```bash
 stage=$(mktemp -d)
-tar -xzf dist/pmt-raw-capture-0.5.0.tar.gz -C "$stage"
-cd "$stage/pmt-raw-capture-0.5.0"
+tar -xzf dist/pmt-raw-capture-0.5.1.tar.gz -C "$stage"
+cd "$stage/pmt-raw-capture-0.5.1"
 ./pmt-capture --version
 python3 -m unittest discover -s tests -v
 ```
@@ -47,9 +49,9 @@ python3 -m unittest discover -s tests -v
 ## Distribution
 
 Offline analysis defaults to the built-in `pmt.decode` package. No Go binary or
-third-party Python package is required. XML is supplied by the user; see
-[platform data](platform-data.md). The release includes only original synthetic
-XML fixtures, not platform schemas, EDP files or measurement results.
+third-party Python package is required. The Full Bundle includes the fixed XML
+registry described in [platform data](platform-data.md); explicit `--metadata`
+still overrides it. Raw captures, EDP files and measurement results are excluded.
 
 The optional `--decoder` compatibility path still accepts an external adapter:
 one raw envelope on stdin, ordered `{index,result}` records on stdout, with exact

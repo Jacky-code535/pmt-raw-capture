@@ -1,6 +1,6 @@
 # systemd 部署
 
-适用版本：0.5.0。服务相关脚本位于 `service/`，以下命令均从工具包根目录执行。0.5.0 的 AVC01 资格实验使用直接 CLI 流程，不代表 systemd 安装路径已在该主机重新验证。
+适用版本：0.5.1。服务相关脚本位于 `service/`，以下命令均从工具包根目录执行。AVC01 资格实验使用直接 CLI 流程，不代表 systemd 安装路径已在该主机重新验证。
 安装后代码位于 `/opt/pmt-system-debug`，任务保存在 `/var/lib/pmt-system-debug/results`。
 
 ## 菜单

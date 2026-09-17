@@ -1,5 +1,16 @@
 # Hardware Qualification
 
+## v0.5.1 Full Bundle Verification
+
+The final package includes all 798 tracked platform-data files from commit
+`df82b1741dec619300707881114f6b17b5204f60`. On AVC01, the package automatically
+selected its bundled registry without `--metadata`: 3/3 snapshots were complete,
+all seven observed GUID/size schemas validated, and 96,294 decoded rows were valid.
+
+The full registry contains 258 mappings. The decoder loads 220 schemas; 38 have
+definition-level blockers. These unrelated definitions do not affect the seven
+schemas observed in the AVC01 qualification run.
+
 ## AVC01 GNR End-to-End Run
 
 On 2026-09-17, the v0.5.0 candidate package built from commit `813d88e` was

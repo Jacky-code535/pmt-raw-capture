@@ -2,13 +2,13 @@
 
 Linux Intel PMT **采集、压缩归档、解包、XML 解码和分析工具**。现场只读 raw telemetry，离线使用内置 Python 解码器完成指标转换、序列重建、统计和实验对齐。字段和单位来自平台 XML；物理拓扑使用显式映射。运行依赖 Python 3.7+，无需 pip 包或 Go 可执行文件。
 
-当前版本为 **0.5.0**。XML 注册表由使用者单独提供，不包含在本仓库或工具包中。
+当前版本为 **0.5.1 Full Bundle**。发布包内置固定版本的完整 Intel PMT XML registry；`validate-platform` 和 `analyze` 默认自动使用它，也可用 `--metadata` 覆盖。
 
-**[下载完整工具包 v0.5.0](https://github.com/Jacky-code535/pmt-raw-capture/releases/download/v0.5.0/pmt-raw-capture-0.5.0.tar.gz)**
+**[下载完整工具包 v0.5.1](https://github.com/Jacky-code535/pmt-raw-capture/releases/download/v0.5.1/pmt-raw-capture-0.5.1.tar.gz)**
 
 ## 完整工具快速开始
 
-在当前源码目录或解压后的 0.5.0 工具目录执行：
+在当前源码目录或解压后的 0.5.1 工具目录执行：
 
 ```bash
 # 合成数据 smoke，不需要 PMT 硬件、平台 XML 或 root
@@ -20,14 +20,14 @@ bash scripts/smoke_test.sh
 
 # 在分析机上解包并分析，也可直接分析原始 results 目录
 ./pmt-capture unpack packages/pmt-capture-trial-001.tar.gz --output replay
-./pmt-capture validate-platform --run-dir replay/trial-001 --metadata /path/to/pmt.xml
-./pmt-capture analyze --run-dir replay/trial-001 --metadata /path/to/pmt.xml \
+./pmt-capture validate-platform --run-dir replay/trial-001
+./pmt-capture analyze --run-dir replay/trial-001 \
   --output analysis/trial-001
 ```
 
 采集权限不足时，只对采集命令使用 `sudo`。操作者决定何时执行 `start`，用 `--interval` 控制相邻样本的计划启动间隔，用 `--samples` 控制计划样本数，并可随时执行 `stop`。配置采用 JSON；路径相对于配置文件目录解析，命令行显式值优先。不自动加载默认配置，输出目录和 run ID 不可复用。平台匹配使用精确 **GUID + Size**，不是根据机器标签猜测。XML 要求见[平台数据](docs/platform-data.md)，完整命令和输出见[离线工作流](docs/offline.md)。
 
-下载后将压缩包放到被测主机。v0.4.3 仅含旧采集器；历史版本见 [Releases](https://github.com/Jacky-code535/pmt-raw-capture/releases)。
+下载后将压缩包放到被测主机。v0.5.0 不含 XML，v0.4.3 仅含旧采集器；历史版本见 [Releases](https://github.com/Jacky-code535/pmt-raw-capture/releases)。
 
 ## 开始采集
 
@@ -36,8 +36,8 @@ bash scripts/smoke_test.sh
 解压并查看 PMT 设备：
 
 ```bash
-tar -xzf pmt-raw-capture-0.5.0.tar.gz
-cd pmt-raw-capture-0.5.0
+tar -xzf pmt-raw-capture-0.5.1.tar.gz
+cd pmt-raw-capture-0.5.1
 sudo ./pmt-capture inventory
 ```
 
@@ -89,7 +89,6 @@ sudo ./pmt-capture start --endpoint gnr-rack-01 --run-id run-20260910 \
 ./pmt-capture archive --run-dir results/run-20260910 --output archives/run-20260910
 
 ./pmt-capture analyze --run-dir results/run-20260910 \
-  --metadata /path/to/pmt.xml \
   --topology topology.csv --policies policies.json --events experiment-events.csv \
   --output analysis/run-20260910
 ```

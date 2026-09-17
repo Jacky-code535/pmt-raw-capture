@@ -85,10 +85,22 @@ class EngineerCliTest(unittest.TestCase):
             ["validate-platform"],
             ["analyze", "--run-dir", "run", "--output", "analysis"],
         )
-        for command in commands:
-            with self.subTest(command=command[0]), contextlib.redirect_stderr(io.StringIO()), self.assertRaises(SystemExit) as raised:
-                cli.main(command)
-            self.assertEqual(raised.exception.code, 2)
+        with mock.patch.object(cli, "bundled_metadata", return_value=None):
+            for command in commands:
+                with self.subTest(command=command[0]), contextlib.redirect_stderr(io.StringIO()), self.assertRaises(SystemExit) as raised:
+                    cli.main(command)
+                self.assertEqual(raised.exception.code, 2)
+
+    def test_xml_commands_default_to_bundled_metadata(self):
+        metadata = self.root / "bundled-platform-data" / "xml" / "pmt.xml"
+        metadata.parent.mkdir(parents=True)
+        metadata.write_text("<pmt/>")
+        with mock.patch.object(cli, "bundled_metadata", return_value=metadata):
+            parser = cli.build_parser()
+        validate = parser.parse_args(["validate-platform"])
+        analyze = parser.parse_args(["analyze", "--run-dir", "run", "--output", "analysis"])
+        self.assertEqual(validate.metadata, metadata)
+        self.assertEqual(analyze.metadata, metadata)
 
     def test_command_help_explains_actions(self):
         parser = cli.build_parser()

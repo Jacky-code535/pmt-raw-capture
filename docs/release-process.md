@@ -1,28 +1,29 @@
 # Release Process
 
-Version 0.5.0 is the current packaged release. Its representative hardware
+Version 0.5.1 Full Bundle is the current packaged release. Its representative hardware
 qualification is recorded in [qualification](qualification.md).
 
 ## Local Gates
 
 ```bash
 python3 -m unittest discover -s tests -v
-bash scripts/build-package.sh
+bash scripts/build-full-package.sh
 stage=$(mktemp -d)
-tar -xzf dist/pmt-raw-capture-0.5.0.tar.gz -C "$stage"
-cd "$stage/pmt-raw-capture-0.5.0"
+tar -xzf dist/pmt-raw-capture-0.5.1.tar.gz -C "$stage"
+cd "$stage/pmt-raw-capture-0.5.1"
 python3 -m unittest discover -s tests -v
 bash scripts/smoke_test.sh
+(cd bundled-platform-data && sha256sum -c SHA256SUMS)
 ```
 
-Review the tar member list: no platform XML, measurement scripts, run results,
-caches, credentials, private repository references or EDP source files. Only original
-synthetic XML fixtures are included.
+Review the tar member list: only the fixed approved `License`, `Readme.md` and
+`xml/` tree may come from platform data. Measurement scripts, run results, caches,
+credentials, alternate XML trees and EDP source files remain excluded.
 
-CI uses synthetic data. The manual package workflow validates and stores a tool-only
-workflow artifact; GitHub Releases are created separately after the gates pass.
-Raw hardware data and platform XML stay outside this repository; only a sanitized
-qualification summary is published.
+CI uses synthetic data and builds the source-only package. The approved Full Bundle
+is built in the authorized environment from the pinned platform-data commit, then
+validated on representative hardware before upload. Raw hardware data stays outside
+this repository and Release.
 
 ## Approved Publication
 

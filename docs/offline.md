@@ -1,6 +1,6 @@
 # 离线工作流
 
-适用版本：0.5.0。v0.4.3 原始采集结果继续兼容。
+适用版本：0.5.1 Full Bundle。v0.4.3 及 v0.5.0 原始采集结果继续兼容。
 
 ## 流程
 
@@ -39,19 +39,17 @@ archives/trial-001/
 
 ## XML 解码
 
-准备与目标平台和固件匹配的 XML 注册表。检查覆盖后指定原始任务目录和新输出目录：
+Full Bundle 已包含固定 XML 注册表。检查覆盖后指定原始任务目录和新输出目录：
 
 ```bash
-./pmt-capture validate-platform --run-dir archives/trial-001/capture/trial-001 \
-  --metadata /path/to/xml/pmt.xml
+./pmt-capture validate-platform --run-dir archives/trial-001/capture/trial-001
 ./pmt-capture analyze --run-dir archives/trial-001/capture/trial-001 \
-  --metadata /path/to/xml/pmt.xml \
   --output analysis/trial-001
 ```
 
 按每个 aggregator 的精确 GUID + Size 匹配 XML。注册表及所需 schema 复制到 `provenance/xml/`；注册表引用必须位于其目录内。解码器由 XML 决定字段、位偏移和单位，Python 分析层不维护平台字段表。
 
-XML 不随工具分发，`validate-platform` 和 `analyze` 都要求 `--metadata /path/to/xml/pmt.xml`。`--decoder` 仅保留旧外部适配器兼容入口，不是必需依赖。支持的 schema 与公式见[平台数据](platform-data.md)。
+`validate-platform` 和 `analyze` 默认自动使用包内 XML；`--metadata /path/to/xml/pmt.xml` 可覆盖。`--decoder` 仅保留旧外部适配器兼容入口，不是必需依赖。支持的 schema 与公式见[平台数据](platform-data.md)。
 
 收到结果压缩包时，先执行 `./pmt-capture unpack capture.tar.gz --output replay`。输出 JSON 的 `run_dir` 就是分析输入目录。解包拒绝路径穿越、软/硬链接、特殊文件和重复成员，默认上限为 2 GiB 未压缩归档内容与 10,000 个成员。解包后验证原始快照；损坏数据不会作为成功结果保留。归档内嵌的 gzip 快照在后续读取时解压，因此该上限不是所有嵌套内容的内存上限。
 

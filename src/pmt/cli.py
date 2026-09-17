@@ -15,11 +15,17 @@ import sys
 import tarfile
 import tempfile
 import time
+from typing import Optional
 
 if __package__ in (None, ""):
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from pmt.capture import sampler as capture
+
+
+def bundled_metadata() -> Optional[Path]:
+    candidate = Path(__file__).resolve().parents[2] / "bundled-platform-data" / "xml" / "pmt.xml"
+    return candidate if candidate.is_file() else None
 
 
 def is_busy(run_dir: Path) -> bool:
@@ -193,6 +199,7 @@ def pack_run(run_dir: Path, output_dir: Path, allow_partial: bool) -> int:
 
 
 def build_parser() -> argparse.ArgumentParser:
+    default_metadata = bundled_metadata()
     parser = argparse.ArgumentParser(prog="pmt-capture", description="Capture raw Linux PMT locally; decode after experiments.")
     parser.add_argument("--version", action="version", version=capture.TOOL_VERSION)
     commands = parser.add_subparsers(dest="command")
@@ -236,12 +243,14 @@ def build_parser() -> argparse.ArgumentParser:
     unpack.add_argument("input", type=Path)
     unpack.add_argument("--output", required=True, type=Path)
     platform = commands.add_parser("validate-platform", help="validate exact XML coverage for a run or entire registry")
-    platform.add_argument("--metadata", required=True, type=Path, help="PMT XML registry path")
+    platform.add_argument("--metadata", required=default_metadata is None, type=Path,
+                          default=default_metadata, help="PMT XML registry path (default: bundled registry when present)")
     platform.add_argument("--run-dir", type=Path)
     analyze = commands.add_parser("analyze", help="decode saved raw data using exact platform XML")
     analyze.add_argument("--run-dir", required=True, type=Path)
     analyze.add_argument("--output", required=True, type=Path)
-    analyze.add_argument("--metadata", required=True, type=Path, help="PMT XML registry path")
+    analyze.add_argument("--metadata", required=default_metadata is None, type=Path,
+                         default=default_metadata, help="PMT XML registry path (default: bundled registry when present)")
     analyze.add_argument("--decoder", type=Path, help="optional legacy external decoder; default: built-in Python decoder")
     analyze.add_argument("--policies", type=Path, help="JSON metric counter/invalid-value policies")
     analyze.add_argument("--topology", type=Path, help="CSV endpoint,aggregator,metric,system,socket,die,module")
