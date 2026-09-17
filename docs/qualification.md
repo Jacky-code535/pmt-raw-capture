@@ -2,7 +2,7 @@
 
 ## v0.6.1 README and Permission Verification
 
-The v0.6.1 Full Bundle workflow was exercised on AVC01 with separate privilege
+The v0.6.1 release-package workflow was exercised on AVC01 with separate privilege
 contexts. User `intel` extracted and smoke-tested the package, root performed the
 PMT operations with the sudo caller identity, and `intel` then unpacked, validated
 and analyzed the result without elevated privileges.
@@ -10,7 +10,7 @@ and analyzed the result without elevated privileges.
 | Check | Result |
 | --- | --- |
 | Download checksum file | Pass |
-| Full Bundle XML presence and smoke | Pass; 2/2 tests |
+| Release-package XML presence and smoke | Pass; 2/2 tests |
 | Capture completeness | 3/3 snapshots; 36/36 regions each |
 | Sudo pack handoff | `0640 intel:intel`; readable by caller |
 | XML matching | 7/7 observed GUID + Size schemas valid |
@@ -18,12 +18,12 @@ and analyzed the result without elevated privileges.
 | Non-root unpack and analysis | Pass |
 
 This verifies the README's same-host path and closes the root-owned `0600` archive
-problem present in v0.6.0. A source checkout remains source-only and requires an
-explicit `--metadata` path; only the Full Bundle supplies the default registry.
+problem present in v0.6.0. A source checkout requires an explicit `--metadata`
+path; only the release package supplies the default registry.
 
 ## v0.6.0 GNR Edition Release Verification
 
-The v0.6.0 final release Full Bundle was transferred to AVC01 and exercised using
+The v0.6.0 final release package was transferred to AVC01 and exercised using
 the same commands documented for users: inventory/capture, verify, pack, unpack,
 run-scoped XML validation and analysis. No explicit `--metadata` path was used.
 
@@ -40,7 +40,7 @@ run-scoped XML validation and analysis. No explicit `--metadata` path was used.
 This short run is the release-artifact acceptance gate. The longer 30-snapshot
 run below remains the representative duration and output-volume qualification.
 
-## v0.5.1 Full Bundle Verification
+## v0.5.1 Release Package Verification
 
 The final package includes all 798 tracked platform-data files from commit
 `df82b1741dec619300707881114f6b17b5204f60`. On AVC01, the package automatically
@@ -86,5 +86,5 @@ the expanded output size rather than only the capture archive size.
 This is representative qualification for the tested GNR inventory and XML. It
 does not claim support for every platform or XML revision. Raw captures, decoded
 CSV files, host addresses and internal paths are not included in the repository
-or release package. The approved XML registry is included only in the Full Bundle;
+or release package. The approved XML registry is included only in the release package;
 its content is not committed to this source repository.

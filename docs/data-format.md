@@ -84,7 +84,7 @@ other programs or users from changing files.
 5. Retain metadata/decoder versions alongside the resulting time series.
 
 Changing only the decoder must not require recollecting raw data. Compatibility
-with a particular decoder must still be tested; the Full Bundle contains the
+with a particular decoder must still be tested; the release package contains the
 built-in Python decoder and approved XML registry.
 
 The preview adds `CollectorCPU`, `EffectiveCPUs`, `PlatformLabel`, `XMLVersionLabel`,

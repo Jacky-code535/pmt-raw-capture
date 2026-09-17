@@ -20,7 +20,7 @@ and hardware qualification are separate platform tests.
 ./scripts/build-package.sh
 ```
 
-Output: `dist/pmt-raw-capture-0.6.1.tar.gz`. This source-only package omits platform data.
+Output: `dist/pmt-raw-capture-0.6.1.tar.gz`. This developer package omits platform data.
 The approved release asset is built with `./scripts/build-full-package.sh`, which
 adds the fixed platform-data XML registry, replaces the archive with the full package,
 and writes the adjacent `.tar.gz.sha256` verification file.
@@ -50,7 +50,7 @@ python3 -m unittest discover -s tests -v
 ## Distribution
 
 Offline analysis defaults to the built-in `pmt.decode` package. No Go binary or
-third-party Python package is required. The Full Bundle includes the fixed XML
+third-party Python package is required. The release package includes the fixed XML
 registry described in [platform data](platform-data.md); explicit `--metadata`
 still overrides it. Raw captures, EDP files and measurement results are excluded.
 
@@ -65,5 +65,5 @@ Release authorization and dependency handling are described in
 [release process](release-process.md).
 
 This repository is public. No open-source license is currently assigned; source is
-visible but no additional redistribution rights are granted. The approved Full Bundle
+visible but no additional redistribution rights are granted. The approved release package
 contains the fixed platform XML described in the release; raw captures are always shared separately.

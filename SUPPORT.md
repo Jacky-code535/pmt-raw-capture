@@ -3,12 +3,12 @@
 ## 支持范围
 
 当前正式验证范围为 [GNR 兼容性矩阵](docs/compatibility.md) 中列出的精确
-`GUID + Size` 组合。Full Bundle 中包含更多 XML 不代表对应平台已经通过验证。
+`GUID + Size` 组合。发布包中包含更多 XML 不代表对应平台已经通过验证。
 遇到未知组合时应保留 `inventory` 输出，不要手工选择相近 XML。
 
 ## 提交问题前
 
-先在解压后的 Full Bundle 根目录运行：
+先在解压后的发布包根目录运行：
 
 ```bash
 ./pmt-capture --version
@@ -31,6 +31,6 @@ raw snapshot、inventory、validation、日志和分析结果可能包含平台�
 
 ## 分发边界
 
-源码仓库当前未附加开源许可证，公开可见不等于获得复制或再分发授权。Full Bundle
-还包含采用独立许可证的 Intel PMT platform data。工具和 Full Bundle 仅应在已批准的
+源码仓库当前未附加开源许可证，公开可见不等于获得复制或再分发授权。发布包
+还包含采用独立许可证的 Intel PMT platform data。工具和发布包仅应在已批准的
 组织与用途范围内分享；对外分发前必须完成相应许可审批。

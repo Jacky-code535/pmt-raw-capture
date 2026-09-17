@@ -21,7 +21,7 @@ class FieldKitTest(unittest.TestCase):
         readme = (ROOT.parent / "README.md").read_text(encoding="utf-8")
         self.assertIn("REQUIREMENTS.md", readme)
         self.assertIn("SUPPORT.md", readme)
-        self.assertIn("Full Bundle", readme)
+        self.assertIn("pmt-raw-capture-0.6.1.tar.gz", readme)
         self.assertIn("sha256sum -c", readme)
 
     def test_service_package_paths(self):

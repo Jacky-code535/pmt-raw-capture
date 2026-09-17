@@ -39,7 +39,7 @@ archives/trial-001/
 
 ## XML 解码
 
-Full Bundle 已包含固定 XML 注册表。检查覆盖后指定原始任务目录和新输出目录：
+正式发布包已包含固定 XML 注册表。检查覆盖后指定原始任务目录和新输出目录：
 
 ```bash
 ./pmt-capture validate-platform --run-dir archives/trial-001/capture/trial-001

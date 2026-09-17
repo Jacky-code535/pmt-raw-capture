@@ -4,7 +4,7 @@
 
 ## 支持的工作流
 
-Release Full Bundle 支持在 GNR Linux 主机上独立完成：
+正式发布包支持在 GNR Linux 主机上独立完成：
 
 ```text
 PMT discovery -> capture -> verify -> package -> unpack
@@ -30,7 +30,7 @@ PMT discovery -> capture -> verify -> package -> unpack
 | `REQ-STAT-001` | 生成 mean/min/max/p95/std/CV/valid_count | 完成 | `summary.csv` | 手算统计单测 |
 | `REQ-QUAL-001` | 输出 observed/valid/invalid/missing 数据质量 | 完成 | `data-quality.csv` | 汇总测试、AVC01 32,098 series |
 | `REQ-TOP-001` | 支持显式 topology，不从 telem ID 猜物理层级 | 完成 | topology CSV、scope views | topology 单测 |
-| `REQ-REL-001` | Full Bundle 可独立运行并通过 Python 3.7/3.10/3.13 | 完成 | GitHub Release、CI | extracted-package CI |
+| `REQ-REL-001` | 发布包可独立运行并通过 Python 3.7/3.10/3.13 | 完成 | GitHub Release、CI | extracted-package CI |
 | `REQ-UX-001` | 普通用户只按 README 可完成三样本闭环 | 0.6.1 完成 | README exact workflow | 非 root handoff 测试、GNR replay |
 | `REQ-SHC-001` | 为 SHC 保留通用时间事件输入边界 | 预留 | `--events`、adapter contract | [SHC 预留说明](docs/shc-integration.md) |
 
@@ -46,7 +46,7 @@ PMT discovery -> capture -> verify -> package -> unpack
 
 ## 发布硬门槛
 
-1. source 与 extracted Full Bundle 全部自动测试通过；
+1. 源码和解压后的发布包全部自动测试通过；
 2. Python 3.7、3.10、3.13 CI 通过；
 3. bundled platform-data SHA 清单全部通过；
 4. 最终发布字节在 GNR 完成三样本 capture-to-analysis；

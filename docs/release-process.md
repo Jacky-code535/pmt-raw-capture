@@ -21,7 +21,7 @@ Review the tar member list: only the fixed approved `License`, `Readme.md` and
 `xml/` tree may come from platform data. Measurement scripts, run results, caches,
 credentials, alternate XML trees and EDP source files remain excluded.
 
-CI uses synthetic data and builds the source-only package. The approved Full Bundle
+CI uses synthetic data and builds the developer package. The approved release package
 is built in the authorized environment from the pinned platform-data commit, then
 validated on representative hardware before upload. Raw hardware data stays outside
 this repository and Release.
