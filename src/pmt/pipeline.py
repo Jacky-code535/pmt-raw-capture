@@ -26,6 +26,8 @@ FIELDS = ("timestamp", "endpoint", "metric", "value", "unit", "sequence",
           "aggregator", "guid", "system", "socket", "die", "module", "measure", "validity")
 GROUP = analysis.IDENTITY + ("measure",)
 STATS = ("mean", "min", "max", "p95", "std", "cv", "valid_count")
+QUALITY = ("expected_count", "observed_count", "valid_count", "invalid_count",
+           "missing_count", "valid_rate", "first_timestamp", "last_timestamp")
 
 
 def digest(path):
@@ -258,6 +260,8 @@ def analyze_run(args):
                                 phases.add(match, GROUP + ("phase", "test_item", "status"))
                             failures.writerows(analysis.failure_windows(sample, events, args.failure_before, args.failure_after))
                 writer(stack, target / "summary.csv", GROUP + STATS).writerows(summary.rows())
+                writer(stack, target / "data-quality.csv", GROUP + QUALITY).writerows(
+                    summary.quality_rows(int(state["RequestedSamples"])))
                 writer(stack, target / "phase-summary.csv", GROUP + ("phase", "test_item", "status") + STATS).writerows(
                     phases.rows(GROUP + ("phase", "test_item", "status")))
             if args.decoder and digest(args.decoder) != decoder_hash:

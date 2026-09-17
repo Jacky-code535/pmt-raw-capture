@@ -1,5 +1,24 @@
 # Hardware Qualification
 
+## v0.6.0 GNR Edition Release Verification
+
+The v0.6.0 final release Full Bundle was transferred to AVC01 and exercised using
+the same commands documented for users: inventory/capture, verify, pack, unpack,
+run-scoped XML validation and analysis. No explicit `--metadata` path was used.
+
+| Check | Result |
+| --- | --- |
+| Capture completeness | 3/3 snapshots; 36/36 regions each |
+| Snapshot integrity | 3/3 manifest SHA-256 values present and verified |
+| XML matching | 7/7 observed GUID + Size schemas valid |
+| Decoded output | 96,294 rows |
+| Data Quality | 32,098 series; every series expected 3 and had 3 valid values |
+| Invalid or missing series values | 0 invalid; 0 missing |
+| Pack and safe unpack verification | Pass |
+
+This short run is the release-artifact acceptance gate. The longer 30-snapshot
+run below remains the representative duration and output-volume qualification.
+
 ## v0.5.1 Full Bundle Verification
 
 The final package includes all 798 tracked platform-data files from commit
@@ -44,6 +63,7 @@ views retain each decoded observation. Capacity planning should therefore use
 the expanded output size rather than only the capture archive size.
 
 This is representative qualification for the tested GNR inventory and XML. It
-does not claim support for every platform or XML revision. Platform XML, raw
-captures, decoded CSV files, host addresses and internal paths are not included
-in this repository or release package.
+does not claim support for every platform or XML revision. Raw captures, decoded
+CSV files, host addresses and internal paths are not included in the repository
+or release package. The approved XML registry is included only in the Full Bundle;
+its content is not committed to this source repository.

@@ -200,7 +200,10 @@ def pack_run(run_dir: Path, output_dir: Path, allow_partial: bool) -> int:
 
 def build_parser() -> argparse.ArgumentParser:
     default_metadata = bundled_metadata()
-    parser = argparse.ArgumentParser(prog="pmt-capture", description="Capture raw Linux PMT locally; decode after experiments.")
+    parser = argparse.ArgumentParser(
+        prog="pmt-capture",
+        description="Intel PMT capture and offline analysis toolkit for Linux.",
+    )
     parser.add_argument("--version", action="version", version=capture.TOOL_VERSION)
     commands = parser.add_subparsers(dest="command")
     inventory = commands.add_parser("inventory", help="discover PMT regions")

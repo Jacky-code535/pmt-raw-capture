@@ -1,6 +1,6 @@
 # Release Process
 
-Version 0.5.1 Full Bundle is the current packaged release. Its representative hardware
+Version 0.6.0 GNR Edition is the current packaged release. Its representative hardware
 qualification is recorded in [qualification](qualification.md).
 
 ## Local Gates
@@ -9,8 +9,8 @@ qualification is recorded in [qualification](qualification.md).
 python3 -m unittest discover -s tests -v
 bash scripts/build-full-package.sh
 stage=$(mktemp -d)
-tar -xzf dist/pmt-raw-capture-0.5.1.tar.gz -C "$stage"
-cd "$stage/pmt-raw-capture-0.5.1"
+tar -xzf dist/pmt-raw-capture-0.6.0.tar.gz -C "$stage"
+cd "$stage/pmt-raw-capture-0.6.0"
 python3 -m unittest discover -s tests -v
 bash scripts/smoke_test.sh
 (cd bundled-platform-data && sha256sum -c SHA256SUMS)

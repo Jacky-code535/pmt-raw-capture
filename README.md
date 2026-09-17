@@ -1,33 +1,35 @@
-# PMT Raw Capture
+# Intel PMT Capture and Analysis Toolkit
 
-Linux Intel PMT **采集、压缩归档、解包、XML 解码和分析工具**。现场只读 raw telemetry，离线使用内置 Python 解码器完成指标转换、序列重建、统计和实验对齐。字段和单位来自平台 XML；物理拓扑使用显式映射。运行依赖 Python 3.7+，无需 pip 包或 Go 可执行文件。
+面向 GNR Linux 主机的 Intel PMT **采集、打包、解包、XML 解码和统计工具**。现场只读 raw telemetry，离线使用内置 Python 解码器生成时间序列、统计摘要和数据质量表。运行依赖 Python 3.7+，无需 pip 包或 Go 可执行文件。
 
-当前版本为 **0.5.1 Full Bundle**。发布包内置固定版本的完整 Intel PMT XML registry；`validate-platform` 和 `analyze` 默认自动使用它，也可用 `--metadata` 覆盖。
+当前版本为 **0.6.0 GNR Edition**。发布包内置固定版本的已批准 Intel PMT XML registry；`validate-platform` 和 `analyze` 默认自动使用它，也可用 `--metadata` 覆盖。正式硬件资格范围见 [GNR 兼容性](docs/compatibility.md)。
 
-**[下载完整工具包 v0.5.1](https://github.com/Jacky-code535/pmt-raw-capture/releases/download/v0.5.1/pmt-raw-capture-0.5.1.tar.gz)**
+**[下载完整工具包 v0.6.0](https://github.com/Jacky-code535/pmt-raw-capture/releases/download/v0.6.0/pmt-raw-capture-0.6.0.tar.gz)**
 
 ## 完整工具快速开始
 
-在当前源码目录或解压后的 0.5.1 工具目录执行：
+下载并解压后，先在 GNR 主机完成三次短采集，再离线分析：
 
 ```bash
-# 合成数据 smoke，不需要 PMT 硬件、平台 XML 或 root
+# 可选：先检查工具，不需要 PMT 硬件或 root
 bash scripts/smoke_test.sh
 
-# 在提供 PMT sysfs 的被测机上采集
-./pmt-capture start --config examples/capture_config.json
-./pmt-capture pack --run-dir results/trial-001 --output packages
+# GNR 主机：发现设备并采集三次
+sudo ./pmt-capture inventory
+sudo ./pmt-capture start --endpoint gnr-host --platform GNR \
+  --run-id gnr-smoke-001 --interval 2 --samples 3
+sudo ./pmt-capture pack --run-dir results/gnr-smoke-001 --output packages
 
-# 在分析机上解包并分析，也可直接分析原始 results 目录
-./pmt-capture unpack packages/pmt-capture-trial-001.tar.gz --output replay
-./pmt-capture validate-platform --run-dir replay/trial-001
-./pmt-capture analyze --run-dir replay/trial-001 \
-  --output analysis/trial-001
+# 同一主机或分析机：解包、检查 XML 覆盖并分析
+./pmt-capture unpack packages/pmt-capture-gnr-smoke-001.tar.gz --output replay
+./pmt-capture validate-platform --run-dir replay/gnr-smoke-001
+./pmt-capture analyze --run-dir replay/gnr-smoke-001 \
+  --output analysis/gnr-smoke-001
 ```
 
 采集权限不足时，只对采集命令使用 `sudo`。操作者决定何时执行 `start`，用 `--interval` 控制相邻样本的计划启动间隔，用 `--samples` 控制计划样本数，并可随时执行 `stop`。配置采用 JSON；路径相对于配置文件目录解析，命令行显式值优先。不自动加载默认配置，输出目录和 run ID 不可复用。平台匹配使用精确 **GUID + Size**，不是根据机器标签猜测。XML 要求见[平台数据](docs/platform-data.md)，完整命令和输出见[离线工作流](docs/offline.md)。
 
-下载后将压缩包放到被测主机。v0.5.0 不含 XML，v0.4.3 仅含旧采集器；历史版本见 [Releases](https://github.com/Jacky-code535/pmt-raw-capture/releases)。
+下载后将压缩包放到被测主机。仓库名和压缩包名继续保留 `pmt-raw-capture`，避免破坏已有链接和脚本；产品能力已经覆盖完整采集与离线分析。历史版本见 [Releases](https://github.com/Jacky-code535/pmt-raw-capture/releases)。
 
 ## 开始采集
 
@@ -36,8 +38,8 @@ bash scripts/smoke_test.sh
 解压并查看 PMT 设备：
 
 ```bash
-tar -xzf pmt-raw-capture-0.5.1.tar.gz
-cd pmt-raw-capture-0.5.1
+tar -xzf pmt-raw-capture-0.6.0.tar.gz
+cd pmt-raw-capture-0.6.0
 sudo ./pmt-capture inventory
 ```
 
@@ -100,6 +102,7 @@ sudo ./pmt-capture start --endpoint gnr-rack-01 --run-id run-20260910 \
 | `decoded.csv` | 解码后的观测值：`timestamp`、`endpoint`、`metric`、`value`、`unit`，以及 aggregator、GUID、序号与拓扑列 |
 | `series.csv` | 序列重建结果：在 decoded 基础上增加 `measure`（`value` / `delta` / `rate`）与 `validity`（缺样、回绕、无效标记等） |
 | `summary.csv` | 每条序列统计：`mean`、`min`、`max`、`p95`、`std`、`cv`、`valid_count` |
+| `data-quality.csv` | 每条序列的计划数、观测数、有效数、无效数、缺失数和有效率 |
 | `view-system.csv` … `view-aggregator.csv` | 按 **system → socket → die → module → endpoint → aggregator** 分 scope 的序列视图（需 `topology.csv`；不假设 endpoint 等于 CPU core） |
 | `aligned.csv` | 与可选实验事件 CSV 对齐：`timestamp`、`phase`、`test_item`、PMT 指标与 `value` |
 | `phase-summary.csv` | 每个 phase / test_item / status 的序列统计 |
@@ -119,6 +122,9 @@ sudo ./pmt-capture start --endpoint gnr-rack-01 --run-id run-20260910 \
 | [离线工作流](docs/offline.md) | XML 解码、序列重建、统计、拓扑和实验对齐 |
 | [架构](docs/architecture.md) | 模块边界、数据流与兼容性 |
 | [平台数据](docs/platform-data.md) | XML 输入要求、验证和解码范围 |
+| [GNR 兼容性](docs/compatibility.md) | 已验证 GUID、XML 版本和支持边界 |
+| [0.6.0 项目计划](docs/gnr-plan.md) | 精简范围、阶段验收和后续工作 |
+| [SHC 预留接口](docs/shc-integration.md) | 后续集成边界，当前版本不启用 |
 | [硬件资格记录](docs/qualification.md) | AVC01 真实 GNR 采集、解包、解码和统计结果 |
 | [发布流程](docs/release-process.md) | 包构建、依赖边界和发布审批 |
 | [服务部署](docs/service.md) | systemd 安装、开机启动和菜单操作 |
@@ -138,4 +144,4 @@ scripts/        工具包构建脚本
 tests/          自动化测试
 ```
 
-命令帮助：`./pmt-capture --help`。XML、raw 和分析结果独立保存，不随工具源码分发。
+命令帮助：`./pmt-capture --help`。Full Bundle 包含批准的 XML；raw 和分析结果始终与工具包分开保存。

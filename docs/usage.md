@@ -1,12 +1,12 @@
 # 使用指南
 
-适用版本：0.5.1 Full Bundle。下载和首次采集见 [README](../README.md)。本页列出完整参数、任务状态和排障方法。
+适用版本：0.6.0 GNR Edition。下载和首次采集见 [README](../README.md)。本页列出完整参数、任务状态和排障方法。
 
 `--interval` 是相邻采样计划开始时间的间隔，不是读取一份快照所需的时间。例如三份、间隔 10 秒时，计划开始时间为第 0、10、20 秒；每份实际读取耗时由 `duration_ms` 报告。
 
 ## 环境要求
 
-版本 0.5.1 提供 `--cpu N`（Linux 逻辑 CPU 编号）、`--platform GNR` 和 `--xml-version REV`。CPU 必须在当前 cpuset 允许范围内；后台启动与续采保留选择，实际采样 CPU 集合记录在 `run.json` 的 `EffectiveCPUs`。平台与 XML 版本标签由操作者提供，BIOS 信息从 DMI 读取。离线命令见[离线工作流](offline.md)。
+版本 0.6.0 提供 `--cpu N`（Linux 逻辑 CPU 编号）、`--platform GNR` 和 `--xml-version REV`。CPU 必须在当前 cpuset 允许范围内；后台启动与续采保留选择，实际采样 CPU 集合记录在 `run.json` 的 `EffectiveCPUs`。平台与 XML 版本标签由操作者提供，BIOS 信息从 DMI 读取。离线命令见[离线工作流](offline.md)。
 
 | 要求 | 说明 |
 | --- | --- |
@@ -107,7 +107,7 @@ PMT 区域、GUID 或 Size 改变后应新建任务。主机重启后，CLI 任�
 | --- | --- |
 | `results/<run-id>/snapshots/bulk-*.json.gz` | 每轮原始数据，含 GUID、长度、时间戳和 Base64 编码的原始字节 |
 | `results/<run-id>/run.json` | 机器信息、采集参数和任务状态 |
-| `results/<run-id>/manifest.ndjson` | 每份快照的文件名和采集摘要 |
+| `results/<run-id>/manifest.ndjson` | 每份快照的文件名、SHA-256 和采集摘要 |
 | `results/<run-id>/collector.log` | 采集事件；后台启动输出另见 `console.log` |
 | `output/pmt-capture-<run-id>.tar.gz` | 交付包，含快照、日志、检查报告和 `result.txt` 摘要 |
 

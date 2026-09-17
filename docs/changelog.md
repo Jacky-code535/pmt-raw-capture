@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.6.0 (2026-09-17)
+
+- Rename the product to Intel PMT Capture and Analysis Toolkit while retaining compatible repository, archive and CLI names.
+- Focus the supported release path on GNR and publish the exact AVC01-qualified GUID/size boundary.
+- Record and verify SHA-256 for every new compressed snapshot without changing raw format v1.
+- Add a compact per-series `data-quality.csv`; keep `summary.csv` backward compatible.
+- Document strict decode behavior and reserve SHC integration without adding a runtime dependency.
+
 ## 0.5.1 (2026-09-17)
 
 - Bundle the complete approved Intel PMT XML registry from fixed platform-data commit `df82b1741dec619300707881114f6b17b5204f60`.

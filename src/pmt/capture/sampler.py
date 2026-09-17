@@ -33,7 +33,7 @@ from typing import Any, Dict, Iterable, List, Optional, Tuple
 
 
 FORMAT_VERSION = "intel-pmt-local-bulk/v1"
-TOOL_VERSION = "0.5.1"
+TOOL_VERSION = "0.6.0"
 DEFAULT_SYSFS = Path("/sys/class/intel_pmt")
 DEFAULT_OUTPUT_ROOT = Path("./results")
 PMT_ENTRY = re.compile(r"^telem([0-9]+)$")
@@ -123,6 +123,14 @@ def metadata_facts(metadata: Optional[Path]) -> Optional[Dict[str, str]]:
     if not metadata.is_file():
         raise RuntimeError(f"metadata entry does not exist: {metadata}")
     return {"Path": str(metadata.resolve()), "SHA256": hashlib.sha256(metadata.read_bytes()).hexdigest()}
+
+
+def file_sha256(path: Path) -> str:
+    result = hashlib.sha256()
+    with path.open("rb") as source:
+        for block in iter(lambda: source.read(1024 * 1024), b""):
+            result.update(block)
+    return result.hexdigest()
 
 
 
@@ -232,6 +240,7 @@ def capture_bundle(
         "Sequence": sequence,
         "Filename": filename,
         "CompressedBytes": output_path.stat().st_size,
+        "SHA256": file_sha256(output_path),
         "StartedAt": started_wall,
         "FinishedAt": finished_wall,
         "DurationMilliseconds": round(duration_ms, 3),
@@ -556,6 +565,11 @@ def verify_run(run_dir: Path, write_report: bool = True) -> Dict[str, Any]:
         try:
             if path.name not in manifest:
                 raise RuntimeError("file is absent from manifest")
+            record = manifest[path.name]
+            if "CompressedBytes" in record and path.stat().st_size != int(record["CompressedBytes"]):
+                raise RuntimeError("compressed size differs from manifest")
+            if "SHA256" in record and file_sha256(path) != record["SHA256"]:
+                raise RuntimeError("SHA-256 differs from manifest")
             document = read_bundle(path)
             capture = document["Capture"]
             telemetry = document["TelemetryData"]
@@ -660,6 +674,7 @@ def reconcile_run(run_dir: Path, state: Dict[str, Any]) -> int:
         records.append({
             "Sequence": capture["Sequence"], "Filename": path.name,
             "CompressedBytes": path.stat().st_size,
+            "SHA256": file_sha256(path),
             "StartedAt": capture["StartedAt"], "FinishedAt": capture["FinishedAt"],
             "DurationMilliseconds": capture["DurationMilliseconds"],
             "ExpectedAggregators": len(baseline), "CapturedAggregators": len(observed),
@@ -704,7 +719,7 @@ def add_capture_arguments(parser: argparse.ArgumentParser) -> None:
         "--output-root", type=Path, default=DEFAULT_OUTPUT_ROOT,
         help="parent directory for results (default: ./results)",
     )
-    parser.add_argument("--metadata", type=Path, help="optional metadata path to record; not needed for raw capture")
+    parser.add_argument("--metadata", type=Path, help="optional metadata path to record; not needed during capture")
     parser.add_argument("--expected-aggregators", type=int, help="require this many PMT regions (default: discover automatically)")
     parser.add_argument("--interval-seconds", type=float, default=60.0, help="seconds between sample starts (default: 60; positive decimals allowed)")
     parser.add_argument("--samples", type=int, default=600, help="planned number of samples; pmt-capture start requires an explicit positive count")

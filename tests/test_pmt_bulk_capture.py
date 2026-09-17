@@ -104,11 +104,30 @@ class PmtBulkCaptureTest(unittest.TestCase):
             self.assertEqual(
                 capture.run_capture(self._args("three", samples=3)), 0
             )
+        records = capture.read_manifest(self.output / "three" / "manifest.ndjson")
+        self.assertTrue(all(len(record["SHA256"]) == 64 for record in records))
         report = capture.verify_run(self.output / "three")
         self.assertTrue(report["AllObservedFilesValid"])
         self.assertTrue(report["RequestedSampleCountReached"])
         self.assertEqual(report["ObservedFiles"], 3)
         self.assertEqual(report["ManifestRecords"], 3)
+        for record in records:
+            record.pop("SHA256")
+        capture.atomic_write_bytes(
+            self.output / "three" / "manifest.ndjson",
+            "".join(json.dumps(record) + "\n" for record in records).encode("utf-8"),
+        )
+        self.assertTrue(capture.verify_run(self.output / "three")["AllObservedFilesValid"])
+
+    def test_verify_rejects_snapshot_changed_after_capture(self) -> None:
+        with contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(capture.run_capture(self._args("changed")), 0)
+        snapshot = next((self.output / "changed" / "snapshots").glob("*.json.gz"))
+        with snapshot.open("ab") as stream:
+            stream.write(b"changed-after-capture")
+        report = capture.verify_run(self.output / "changed", write_report=False)
+        self.assertFalse(report["AllObservedFilesValid"])
+        self.assertIn("manifest", report["Errors"][0]["Error"])
 
     def test_size_mismatch_is_saved_as_incomplete(self) -> None:
         args = self._args("broken")

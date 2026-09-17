@@ -1,6 +1,6 @@
 # 离线工作流
 
-适用版本：0.5.1 Full Bundle。v0.4.3 及 v0.5.0 原始采集结果继续兼容。
+适用版本：0.6.0 GNR Edition。旧版 raw v1 原始采集结果继续兼容。
 
 ## 流程
 
@@ -62,6 +62,7 @@ Full Bundle 已包含固定 XML 注册表。检查覆盖后指定原始任务目
 | `decoded.csv` | timestamp、endpoint、metric、value、unit，以及 aggregator、GUID、序号与拓扑标签；保留原始解码值 |
 | `series.csv` | 重建序列，增加 measure 与 validity；无效值留空 |
 | `summary.csv` | 每条序列的 mean、min、max、p95、std、cv、valid_count |
+| `data-quality.csv` | 每条序列的 expected、observed、valid、invalid、missing 数量与 valid_rate |
 | `view-system.csv` 等六个视图 | system、socket、die、module、endpoint、aggregator 范围内的序列 |
 | `aligned.csv` | timestamp、phase、test_item、PMT metric、value 等 |
 | `phase-summary.csv` | 每个阶段、测试项、状态的序列统计 |
@@ -91,7 +92,14 @@ Full Bundle 已包含固定 XML 注册表。检查覆盖后指定原始任务目
 
 统计使用有限且非空的数值：mean 为样本算术均值，std 为总体标准差（ddof=0），p95 在排序样本的 `(n-1)*0.95` 位置线性插值，cv 为 std/abs(mean)，均值为零时留空。valid_count 为统计纳入的样本数，不代表硬件健康认证。内置解码器不猜测 poison 常量；无效标记通过显式 `invalid_values` 策略排除。旧外部适配器还可提供 `known_invalid`。未知语义仍需平台验证。
 
-不补零、不自动插值，不跨缺样计算速率。统计暂存使用 SQLite，避免将所有指标的全时序同时保存在 Python 内存中；精确 p95 每次仅加载一条序列。统计转换为 float64，原始整数值和计数器差分仍单独保留。
+不补零、不自动插值，不跨缺样计算速率。`data-quality.csv` 中 expected_count
+取本次任务计划样本数；observed_count 是该序列实际生成的记录数，invalid_count
+是存在记录但值不可用于统计的数量，missing_count 是计划数与观测数的差。
+这些字段描述数据完整性，不是硬件健康结论。统计暂存使用 SQLite，避免将所有指标的全时序同时保存在 Python 内存中；精确 p95 每次仅加载一条序列。统计转换为 float64，原始整数值和计数器差分仍单独保留。
+
+当前 GNR 发布采用严格解码：先运行 `validate-platform`，然后执行 `analyze`。
+任一选中 schema 无法加载或公式无法执行时，分析整体失败并保留 raw，不输出缺少
+部分指标却看似成功的结果。后续只有出现明确诊断需求时才考虑 best-effort 模式。
 
 ## 拓扑
 

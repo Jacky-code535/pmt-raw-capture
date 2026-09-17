@@ -27,6 +27,7 @@ files=(
     tests/test_integrated_workflow.py config/defaults.json examples/capture_config.json
     scripts/smoke_test.sh scripts/build-full-package.sh
     docs/architecture.md docs/platform-data.md docs/qualification.md docs/release-process.md
+    docs/compatibility.md docs/gnr-plan.md docs/shc-integration.md
     RELEASE_NOTES.md .github/workflows/release.yml
 )
 while IFS= read -r -d '' file; do

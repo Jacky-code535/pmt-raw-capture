@@ -43,6 +43,10 @@ class PostprocessTest(unittest.TestCase):
             rows = list(store.rows())
             self.assertEqual([row["mean"] for row in rows], [2, 10])
             self.assertEqual([row["valid_count"] for row in rows], [2, 1])
+            quality = list(store.quality_rows(expected_count=3))
+            self.assertEqual(quality[0]["observed_count"], 2)
+            self.assertEqual(quality[0]["missing_count"], 1)
+            self.assertAlmostEqual(quality[0]["valid_rate"], 2 / 3)
         finally:
             store.close()
 
@@ -102,7 +106,7 @@ class PostprocessTest(unittest.TestCase):
         self.assertEqual([row["valid_count"] for row in values], ["3", "2"])
         with (output / "failure-windows.csv").open() as source:
             self.assertEqual(len(list(csv.DictReader(source))), 18)
-        for name in ("decoded.csv", "series.csv", "aligned.csv", "phase-summary.csv", "view-die.csv"):
+        for name in ("decoded.csv", "series.csv", "data-quality.csv", "aligned.csv", "phase-summary.csv", "view-die.csv"):
             self.assertTrue((output / name).is_file())
         self.assertTrue((output / "provenance/xml/schema/test.xml").is_file())
         comparison = self.root / "comparison.csv"

@@ -1,10 +1,11 @@
 # Raw Bulk Format v1
 
-Collector source version: 0.5.1. The raw v1 contract and older captures remain supported.
+Collector source version: 0.6.0. The raw v1 contract and older captures remain supported.
 
 `FormatVersion` is `intel-pmt-local-bulk/v1`. Each snapshot is UTF-8 JSON inside
 gzip. All numeric payload bytes are preserved, including sentinel values.
-There is no cryptographic integrity scheme. The `TelemetryData` envelope uses
+New runs record each compressed snapshot's SHA-256 in `manifest.ndjson`. This
+detects accidental changes but is not a digital signature. The `TelemetryData` envelope uses
 common Redfish-style fields but is not a firmware-atomic Redfish snapshot.
 
 ## Snapshot
@@ -13,7 +14,7 @@ common Redfish-style fields but is not a firmware-atomic Redfish snapshot.
 {
   "FormatVersion": "intel-pmt-local-bulk/v1",
   "Capture": {
-    "ToolVersion": "0.5.1",
+    "ToolVersion": "0.6.0",
     "RunId": "trial-001",
     "Endpoint": "lab-host",
     "Sequence": 1,
@@ -58,9 +59,10 @@ estimate (`interval * samples`), not measured first-to-last duration.
 Process identity fields are operational metadata, not proof a collector is alive.
 
 `manifest.ndjson` contains one JSON object per published snapshot: Sequence,
-Filename, CompressedBytes, StartedAt, FinishedAt, DurationMilliseconds,
+Filename, CompressedBytes, SHA256, StartedAt, FinishedAt, DurationMilliseconds,
 ExpectedAggregators, CapturedAggregators, Complete, ErrorCount. Resume can rebuild
-this derived file from validated snapshots. Hidden temporary files are ignored.
+this derived file from validated snapshots. `verify` checks SHA256 when present;
+older manifests without it remain compatible. Hidden temporary files are ignored.
 
 `collector.log` is JSON Lines with Time and Event (`start`, `snapshot`, `stopped`,
 `completed`, `failed`) plus event fields. `verification.json` records the latest
@@ -82,7 +84,8 @@ other programs or users from changing files.
 5. Retain metadata/decoder versions alongside the resulting time series.
 
 Changing only the decoder must not require recollecting raw data. Compatibility
-with a particular decoder must still be tested; this release contains no decoder.
+with a particular decoder must still be tested; the Full Bundle contains the
+built-in Python decoder and approved XML registry.
 
 The preview adds `CollectorCPU`, `EffectiveCPUs`, `PlatformLabel`, `XMLVersionLabel`,
 `CollectorSourceSHA256`, `CollectorSourcesSHA256`, `Machine.DMI` and `PlannedSampleSpanSeconds` to new run metadata.

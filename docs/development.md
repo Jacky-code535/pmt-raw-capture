@@ -1,6 +1,6 @@
 # Development
 
-Current release: 0.5.1 Full Bundle.
+Current release: 0.6.0 GNR Edition.
 
 ## Tests
 
@@ -20,7 +20,7 @@ and hardware qualification are separate platform tests.
 ./scripts/build-package.sh
 ```
 
-Output: `dist/pmt-raw-capture-0.5.1.tar.gz`. This source-only package omits platform data.
+Output: `dist/pmt-raw-capture-0.6.0.tar.gz`. This source-only package omits platform data.
 The approved release asset is built with `./scripts/build-full-package.sh`, which
 adds the fixed platform-data XML registry and replaces the archive with the full package.
 
@@ -32,8 +32,8 @@ Validate the extracted package:
 
 ```bash
 stage=$(mktemp -d)
-tar -xzf dist/pmt-raw-capture-0.5.1.tar.gz -C "$stage"
-cd "$stage/pmt-raw-capture-0.5.1"
+tar -xzf dist/pmt-raw-capture-0.6.0.tar.gz -C "$stage"
+cd "$stage/pmt-raw-capture-0.6.0"
 ./pmt-capture --version
 python3 -m unittest discover -s tests -v
 ```
@@ -64,5 +64,5 @@ Release authorization and dependency handling are described in
 [release process](release-process.md).
 
 This repository is public. No open-source license is currently assigned; source is
-visible but no additional redistribution rights are granted. Platform XML and raw
-captures are supplied and shared separately from source releases.
+visible but no additional redistribution rights are granted. The approved Full Bundle
+contains the fixed platform XML described in the release; raw captures are always shared separately.

@@ -25,6 +25,7 @@ XML provisioning and does not fetch schema updates while running.
 - Do not infer physical cores from endpoint or aggregator identifiers.
 - Do not silently turn counters into rates without an explicit policy.
 - Keep original observations separate from validity-filtered series and summaries.
+- Report per-series expected, observed, valid, invalid and missing counts without inferring hardware health.
 - Publish analysis only after all snapshots succeed; failed staging directories are removed.
 - Record input hashes, frozen XML, source hashes and the available platform Git revision.
 
