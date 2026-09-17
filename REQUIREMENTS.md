@@ -1,10 +1,10 @@
 # 需求与验收
 
-本文件是项目 requirement 的唯一总入口。实现细节见 [GNR 实施计划](docs/gnr-plan.md)，已验证硬件范围见 [GNR 兼容性](docs/compatibility.md)，真实主机证据见 [硬件资格记录](docs/qualification.md)。
+本文件汇总当前产品需求及其验收状态。设计与版本记录见 [GNR 版本记录](docs/gnr-plan.md)，已验证硬件范围见 [GNR 兼容性](docs/compatibility.md)，真实主机证据见 [硬件资格记录](docs/qualification.md)。
 
-## 当前目标
+## 支持的工作流
 
-让同事使用一个 Release Full Bundle，在自己的 GNR Linux 主机完成：
+Release Full Bundle 支持在 GNR Linux 主机上独立完成：
 
 ```text
 PMT discovery -> capture -> verify -> package -> unpack
@@ -34,7 +34,7 @@ PMT discovery -> capture -> verify -> package -> unpack
 | `REQ-UX-001` | 普通用户只按 README 可完成三样本闭环 | 0.6.1 完成 | README exact workflow | 非 root handoff 测试、GNR replay |
 | `REQ-SHC-001` | 为 SHC 保留通用时间事件输入边界 | 预留 | `--events`、adapter contract | [SHC 预留说明](docs/shc-integration.md) |
 
-## 当前不做
+## 不支持的范围
 
 - SRF 和其他平台资格；
 - SHC log parser、自动 phase 识别和故障归因；
@@ -42,7 +42,7 @@ PMT discovery -> capture -> verify -> package -> unpack
 - Grafana、Parquet 和异常检测模型；
 - 对未确认 metric 的自动空间聚合。
 
-这些项目不得作为 GNR 当前可用版本的发布阻塞项，也不得在实现前声明为已支持。
+以上功能不属于当前 GNR 版本的支持范围。
 
 ## 发布硬门槛
 

@@ -4,11 +4,11 @@
 
 当前版本为 **0.6.1 GNR Edition**。发布包内置固定版本的已批准 Intel PMT XML registry；`validate-platform` 和 `analyze` 默认自动使用它，也可用 `--metadata` 覆盖。
 
-项目入口：[需求与验收](REQUIREMENTS.md) · [GNR 兼容性](docs/compatibility.md) · [实施计划](docs/gnr-plan.md) · [已知限制](docs/qualification.md)
+使用前请查看 [GNR 兼容性](docs/compatibility.md) 和 [已知限制](docs/qualification.md)。问题反馈和分发边界见[支持说明](SUPPORT.md)。
 
-## 先选择正确的下载文件
+## 下载
 
-普通使用者必须下载 **Release Full Bundle**，不要使用 GitHub 自动生成的 `Source code (zip/tar.gz)`，也不要直接 `git clone` 后照下面的无参数 XML 命令运行。源码仓库不提交 platform XML；Full Bundle 才包含 `bundled-platform-data/xml/pmt.xml`。
+直接使用工具时，请下载 **Release Full Bundle**。GitHub 自动生成的 `Source code (zip/tar.gz)` 和源码仓库不包含 platform XML，不适用于下面的开箱即用流程；Full Bundle 包含 `bundled-platform-data/xml/pmt.xml`。
 
 - [下载 v0.6.1 Full Bundle](https://github.com/Jacky-code535/pmt-raw-capture/releases/download/v0.6.1/pmt-raw-capture-0.6.1.tar.gz)
 - [下载 SHA-256 文件](https://github.com/Jacky-code535/pmt-raw-capture/releases/download/v0.6.1/pmt-raw-capture-0.6.1.tar.gz.sha256)
@@ -74,7 +74,7 @@ printf 'PASS: %s\n' "$ANALYSIS"
 
 如果失败，保留 `inventory-*.json`、`validation-*.json`、`results/<run-id>/collector.log` 和终端错误。不要用相近 GUID 的 XML 代替精确映射。常见问题见[使用指南](docs/usage.md)。
 
-## 源码开发者
+## 从源码运行
 
 `git clone` 得到的是 source-only checkout。运行 XML 命令时必须显式提供完整 registry：
 
@@ -174,12 +174,14 @@ sudo ./pmt-capture start --endpoint gnr-rack-01 --run-id run-20260910 \
 | 文档 | 内容 |
 | --- | --- |
 | [使用指南](docs/usage.md) | 参数、任务状态、结果文件与排障 |
+| [支持说明](SUPPORT.md) | 支持范围、问题反馈所需信息和数据分发边界 |
 | [数据格式](docs/data-format.md) | 快照字段与解码接口 |
 | [离线工作流](docs/offline.md) | XML 解码、序列重建、统计、拓扑和实验对齐 |
 | [架构](docs/architecture.md) | 模块边界、数据流与兼容性 |
 | [平台数据](docs/platform-data.md) | XML 输入要求、验证和解码范围 |
 | [GNR 兼容性](docs/compatibility.md) | 已验证 GUID、XML 版本和支持边界 |
-| [0.6.0 项目计划](docs/gnr-plan.md) | 精简范围、阶段验收和后续工作 |
+| [需求与验收](REQUIREMENTS.md) | 支持范围、需求状态和发布门槛 |
+| [GNR 版本记录](docs/gnr-plan.md) | 0.6.x 范围、设计决策和阶段验收 |
 | [SHC 预留接口](docs/shc-integration.md) | 后续集成边界，当前版本不启用 |
 | [硬件资格记录](docs/qualification.md) | AVC01 真实 GNR 采集、解包、解码和统计结果 |
 | [发布流程](docs/release-process.md) | 包构建、依赖边界和发布审批 |

@@ -12,7 +12,7 @@ ROOT = Path(__file__).resolve().parents[1] / "service"
 
 class FieldKitTest(unittest.TestCase):
     def test_documentation_links(self):
-        for path in [ROOT.parent / "README.md", ROOT.parent / "REQUIREMENTS.md"] + list((ROOT.parent / "docs").glob("*.md")):
+        for path in [ROOT.parent / "README.md", ROOT.parent / "REQUIREMENTS.md", ROOT.parent / "SUPPORT.md"] + list((ROOT.parent / "docs").glob("*.md")):
             text = path.read_text(encoding="utf-8")
             self.assertEqual(text.count("```") % 2, 0, str(path))
             for target in re.findall(r"\]\(([^)]+)\)", text):
@@ -20,6 +20,7 @@ class FieldKitTest(unittest.TestCase):
                     self.assertTrue((path.parent / target).is_file(), target)
         readme = (ROOT.parent / "README.md").read_text(encoding="utf-8")
         self.assertIn("REQUIREMENTS.md", readme)
+        self.assertIn("SUPPORT.md", readme)
         self.assertIn("Full Bundle", readme)
         self.assertIn("sha256sum -c", readme)
 

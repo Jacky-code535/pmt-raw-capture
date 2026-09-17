@@ -2,7 +2,7 @@
 
 ## 目标
 
-0.6.x 的目标是让同事在自己的 GNR Linux 主机上，不依赖作者协助即可完成：
+0.6.x GNR Edition 提供以下完整工作流：
 
 ```text
 inventory -> capture -> verify/pack -> unpack -> validate-platform -> analyze
