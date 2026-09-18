@@ -12,7 +12,7 @@ stage="${temporary}/${NAME}"
 
 mkdir -p "${stage}" "${DIST}"
 files=(
-    VERSION README.md REQUIREMENTS.md SUPPORT.md docs/usage.md docs/colleague-guide.md docs/data-format.md
+    VERSION README.md SUPPORT.md docs/usage.md docs/data-format.md
     docs/development.md docs/changelog.md docs/service.md .gitignore .github/workflows/test.yml
     pmt-capture src/pmt_capture_cli.py src/pmt_bulk_capture.py
     src/pmt_analysis.py src/pmt_postprocess.py docs/offline.md
@@ -26,8 +26,8 @@ files=(
     tests/test_native_decode.py tests/test_unpack.py
     tests/test_integrated_workflow.py config/defaults.json examples/capture_config.json
     scripts/smoke_test.sh scripts/build-full-package.sh
-    docs/architecture.md docs/platform-data.md docs/qualification.md docs/release-process.md
-    docs/compatibility.md docs/gnr-plan.md docs/shc-integration.md
+    docs/architecture.md docs/platform-data.md docs/release-process.md
+    docs/compatibility.md
     RELEASE_NOTES.md .github/workflows/release.yml
 )
 while IFS= read -r -d '' file; do

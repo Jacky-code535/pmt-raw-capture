@@ -12,7 +12,7 @@
 
 ```bash
 ./pmt-capture --version
-sha256sum -c ../pmt-raw-capture-0.6.1.tar.gz.sha256
+sha256sum -c ../pmt-raw-capture-0.6.2.tar.gz.sha256
 bash scripts/smoke_test.sh
 sudo ./pmt-capture inventory > inventory.json
 sudo ./pmt-capture status --run-dir results/<run-id> --json > status.json

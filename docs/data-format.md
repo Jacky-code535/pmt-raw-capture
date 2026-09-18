@@ -1,6 +1,6 @@
 # Raw Bulk Format v1
 
-Collector source version: 0.6.1. The raw v1 contract and older captures remain supported.
+Collector source version: 0.6.2. The raw v1 contract and older captures remain supported.
 
 `FormatVersion` is `intel-pmt-local-bulk/v1`. Each snapshot is UTF-8 JSON inside
 gzip. All numeric payload bytes are preserved, including sentinel values.
@@ -14,7 +14,7 @@ common Redfish-style fields but is not a firmware-atomic Redfish snapshot.
 {
   "FormatVersion": "intel-pmt-local-bulk/v1",
   "Capture": {
-    "ToolVersion": "0.6.1",
+    "ToolVersion": "0.6.2",
     "RunId": "trial-001",
     "Endpoint": "lab-host",
     "Sequence": 1,

@@ -2,7 +2,7 @@
 
 这是一个运行在 **GNR Linux 主机**上的命令行工具，用于完成 Intel PMT 数据的发现、采集、完整性检查、打包、XML 解码和统计分析。它直接读取 Linux PMT sysfs，不修改硬件配置；分析结果为 CSV 和 JSON，可继续用于 Excel、Python 或其他数据工具。
 
-当前版本：**0.6.1 GNR Edition**。运行需要 Python 3.7+、Bash、tar 和 gzip，不需要安装 pip 包、数据库服务或 Go 程序。正式验证范围见 [GNR 兼容性](docs/compatibility.md)。
+当前版本：**0.6.2 GNR Edition**。运行需要 Python 3.7+、Bash、tar 和 gzip，不需要安装 pip 包、数据库服务或 Go 程序。正式验证范围见 [GNR 兼容性](docs/compatibility.md)。
 
 ## 已实现功能
 
@@ -32,33 +32,33 @@ SRF、OOB/Redfish 采集、SHC 日志解析和自动故障归因不属于当前�
 
 下载下面两个文件并放在 GNR 主机的同一目录。第一个是可运行工具包，第二个用于确认下载内容完整。
 
-- [`pmt-raw-capture-0.6.1.tar.gz`](https://github.com/Jacky-code535/pmt-raw-capture/releases/download/v0.6.1/pmt-raw-capture-0.6.1.tar.gz)
-- [`pmt-raw-capture-0.6.1.tar.gz.sha256`](https://github.com/Jacky-code535/pmt-raw-capture/releases/download/v0.6.1/pmt-raw-capture-0.6.1.tar.gz.sha256)
+- [`pmt-raw-capture-0.6.2.tar.gz`](https://github.com/Jacky-code535/pmt-raw-capture/releases/download/v0.6.2/pmt-raw-capture-0.6.2.tar.gz)
+- [`pmt-raw-capture-0.6.2.tar.gz.sha256`](https://github.com/Jacky-code535/pmt-raw-capture/releases/download/v0.6.2/pmt-raw-capture-0.6.2.tar.gz.sha256)
 
 在一个新目录中执行：
 
 ```bash
-mkdir -p "$HOME/pmt-0.6.1"
-cd "$HOME/pmt-0.6.1"
+mkdir -p "$HOME/pmt-0.6.2"
+cd "$HOME/pmt-0.6.2"
 
-curl -fL -O https://github.com/Jacky-code535/pmt-raw-capture/releases/download/v0.6.1/pmt-raw-capture-0.6.1.tar.gz
-curl -fL -O https://github.com/Jacky-code535/pmt-raw-capture/releases/download/v0.6.1/pmt-raw-capture-0.6.1.tar.gz.sha256
-sha256sum -c pmt-raw-capture-0.6.1.tar.gz.sha256
-tar -xzf pmt-raw-capture-0.6.1.tar.gz
-cd pmt-raw-capture-0.6.1
+curl -fL -O https://github.com/Jacky-code535/pmt-raw-capture/releases/download/v0.6.2/pmt-raw-capture-0.6.2.tar.gz
+curl -fL -O https://github.com/Jacky-code535/pmt-raw-capture/releases/download/v0.6.2/pmt-raw-capture-0.6.2.tar.gz.sha256
+sha256sum -c pmt-raw-capture-0.6.2.tar.gz.sha256
+tar -xzf pmt-raw-capture-0.6.2.tar.gz
+cd pmt-raw-capture-0.6.2
 
 ./pmt-capture --version
 bash scripts/smoke_test.sh
 ```
 
-预期：checksum 显示 `OK`，版本输出 `0.6.1`，smoke 显示 `Ran 2 tests` 和 `OK`。若主机不能访问 GitHub，可通过团队批准的渠道传输这两个文件，然后从 `sha256sum` 开始。
+预期：checksum 显示 `OK`，版本输出 `0.6.2`，smoke 显示 `Ran 2 tests` 和 `OK`。若主机不能访问 GitHub，可通过团队批准的渠道传输这两个文件，然后从 `sha256sum` 开始。
 
 ### 2. 完成首次三样本检查
 
 以下命令在同一台 GNR 主机采集三份数据并生成分析结果。将 `gnr-host` 改为便于识别的机器名称：
 
 ```bash
-cd "$HOME/pmt-0.6.1/pmt-raw-capture-0.6.1"
+cd "$HOME/pmt-0.6.2/pmt-raw-capture-0.6.2"
 RUN_ID="gnr-smoke-$(date -u +%Y%m%dT%H%M%SZ)"
 ENDPOINT="gnr-host"
 
@@ -93,7 +93,7 @@ printf 'PASS: %s\n' "$ANALYSIS"
 
 采集期间应看到三行 `"complete":true`。`verify` 应显示 `AllObservedFilesValid: true` 和 `RequestedSampleCountReached: true`；`validate-platform` 应显示 `mapping_valid: true` 和 `valid: true`；最后应打印 `PASS`。不同 GNR inventory 的 decoded 行数可能不同，不应硬编码为 AVC01 的行数。
 
-如果失败，保留 `inventory-*.json`、`validation-*.json`、`results/<run-id>/collector.log` 和终端错误。不要用相近 GUID 的 XML 代替精确映射。排查方法见[使用指南](docs/usage.md)，交接方法见[同事使用与介绍指南](docs/colleague-guide.md)。
+如果失败，保留 `inventory-*.json`、`validation-*.json`、`results/<run-id>/collector.log` 和终端错误。不要用相近 GUID 的 XML 代替精确映射。排查方法见[使用指南](docs/usage.md)和[支持说明](SUPPORT.md)。
 
 ## 后台采集
 
@@ -148,40 +148,10 @@ sudo ./pmt-capture start --endpoint gnr-rack-01 --run-id run-20260910 \
 
 指标集合随平台 XML 变化，具体字段名以解码结果为准。拓扑视图不隐式求和，`valid_count` 不代表硬件健康；平台无效标记需要显式策略。XML 未定义的 FIVR 派生状态不会自动生成。
 
-## 如何理解这个 GitHub 仓库
-
-如果你是**工具使用者**，只需要关注以下入口：
-
-1. 本 README：了解功能并完成第一次三样本检查；
-2. [同事使用与介绍指南](docs/colleague-guide.md)：了解交接方式和正式采集前的责任；
-3. [使用指南](docs/usage.md)：查询完整参数、后台采集和常见问题；
-4. [GNR 兼容性](docs/compatibility.md)：确认当前主机是否在正式验证范围内；
-5. [支持说明](SUPPORT.md)：准备问题材料并确认数据分享边界。
-
-使用者不需要阅读 `src/`、`scripts/`、`service/` 或 `tests/`。这些目录用于开发、
-构建、可选服务部署和自动测试。
-
-如果你是**工具维护者**，主要实现位置如下：
-
-| 路径 | 已实现内容 |
-| --- | --- |
-| `pmt-capture`、`src/pmt/cli.py` | 命令入口和参数检查 |
-| `src/pmt/capture/` | PMT 发现、定时采集、任务状态、停止/恢复、快照验证和打包 |
-| `src/pmt/decode/` | XML registry 读取、精确 schema 选择、位域和公式解码 |
-| `src/pmt/process/` | counter 重建、有效性处理、统计和数据质量 |
-| `src/pmt/export/` | CSV 输出、拓扑映射和安全解包 |
-| `src/pmt/pipeline.py` | validate/analyze 的端到端处理和 provenance |
-| `tests/` | 单元测试、恶意归档检查和完整 CLI 工作流测试 |
-| `.github/workflows/` | Python 3.7、3.10、3.13 自动验证 |
-
-批准的 platform XML 随正式发布包提供，不保存在源码目录中。这样可以让源码开发与
-经过审批的平台数据版本分别管理。
-
-## 文档索引
+## 文档
 
 | 文档 | 内容 |
 | --- | --- |
-| [同事使用与介绍指南](docs/colleague-guide.md) | 工具能力、首次验收、责任边界和可转发介绍 |
 | [使用指南](docs/usage.md) | 参数、任务状态、结果文件与排障 |
 | [支持说明](SUPPORT.md) | 支持范围、问题反馈所需信息和数据分发边界 |
 | [数据格式](docs/data-format.md) | 快照字段与解码接口 |
@@ -189,10 +159,6 @@ sudo ./pmt-capture start --endpoint gnr-rack-01 --run-id run-20260910 \
 | [架构](docs/architecture.md) | 模块边界、数据流与兼容性 |
 | [平台数据](docs/platform-data.md) | XML 输入要求、验证和解码范围 |
 | [GNR 兼容性](docs/compatibility.md) | 已验证 GUID、XML 版本和支持边界 |
-| [需求与验收](REQUIREMENTS.md) | 支持范围、需求状态和发布门槛 |
-| [GNR 版本记录](docs/gnr-plan.md) | 0.6.x 范围、设计决策和阶段验收 |
-| [SHC 预留接口](docs/shc-integration.md) | 后续集成边界，当前版本不启用 |
-| [硬件资格记录](docs/qualification.md) | AVC01 真实 GNR 采集、解包、解码和统计结果 |
 | [发布流程](docs/release-process.md) | 包构建、依赖边界和发布审批 |
 | [服务部署](docs/service.md) | systemd 安装、开机启动和菜单操作 |
 | [开发说明](docs/development.md) | 测试、构建与发布 |

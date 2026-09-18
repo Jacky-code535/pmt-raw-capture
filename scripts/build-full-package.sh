@@ -40,7 +40,7 @@ registry automatically when \`--metadata\` is omitted. An explicit
 \`--metadata\` path takes precedence. \`bundled-platform-data/SHA256SUMS\`
 covers every supplied platform-data file.
 
-The AVC01 GNR qualification inventory resolves all seven observed schemas. The
+The GNR compatibility matrix contains seven hardware-validated schemas. The
 complete registry contains 258 mappings; 220 schemas load with this decoder and
 38 currently have definition-level blockers. Bundling the complete registry does
 not imply that every mapped platform has passed qualification.

@@ -12,17 +12,27 @@ ROOT = Path(__file__).resolve().parents[1] / "service"
 
 class FieldKitTest(unittest.TestCase):
     def test_documentation_links(self):
-        for path in [ROOT.parent / "README.md", ROOT.parent / "REQUIREMENTS.md", ROOT.parent / "SUPPORT.md"] + list((ROOT.parent / "docs").glob("*.md")):
+        for path in [ROOT.parent / "README.md", ROOT.parent / "SUPPORT.md"] + list((ROOT.parent / "docs").glob("*.md")):
             text = path.read_text(encoding="utf-8")
             self.assertEqual(text.count("```") % 2, 0, str(path))
             for target in re.findall(r"\]\(([^)]+)\)", text):
                 if "://" not in target:
                     self.assertTrue((path.parent / target).is_file(), target)
         readme = (ROOT.parent / "README.md").read_text(encoding="utf-8")
-        self.assertIn("REQUIREMENTS.md", readme)
         self.assertIn("SUPPORT.md", readme)
-        self.assertIn("pmt-raw-capture-0.6.1.tar.gz", readme)
+        self.assertIn("pmt-raw-capture-0.6.2.tar.gz", readme)
         self.assertIn("sha256sum -c", readme)
+        self.assertNotIn("REQUIREMENTS.md", readme)
+        self.assertNotIn("colleague-guide.md", readme)
+
+    def test_public_product_boundary(self):
+        root = ROOT.parent
+        for name in (
+            "REQUIREMENTS.md", "docs/colleague-guide.md", "docs/gnr-plan.md",
+            "docs/qualification.md", "docs/shc-integration.md",
+        ):
+            self.assertFalse((root / name).exists(), name)
+            self.assertNotIn(name, (root / "scripts/build-package.sh").read_text(encoding="utf-8"))
 
     def test_service_package_paths(self):
         result = subprocess.run(

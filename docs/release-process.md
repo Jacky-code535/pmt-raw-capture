@@ -1,17 +1,17 @@
 # Release Process
 
-Version 0.6.1 GNR Edition is the current packaged release. Its representative hardware
-qualification is recorded in [qualification](qualification.md).
+Version 0.6.2 GNR Edition is the current packaged release. Representative hardware
+validation records are maintained outside the public repository.
 
 ## Local Gates
 
 ```bash
 python3 -m unittest discover -s tests -v
 bash scripts/build-full-package.sh
-cd dist && sha256sum -c pmt-raw-capture-0.6.1.tar.gz.sha256 && cd ..
+cd dist && sha256sum -c pmt-raw-capture-0.6.2.tar.gz.sha256 && cd ..
 stage=$(mktemp -d)
-tar -xzf dist/pmt-raw-capture-0.6.1.tar.gz -C "$stage"
-cd "$stage/pmt-raw-capture-0.6.1"
+tar -xzf dist/pmt-raw-capture-0.6.2.tar.gz -C "$stage"
+cd "$stage/pmt-raw-capture-0.6.2"
 python3 -m unittest discover -s tests -v
 bash scripts/smoke_test.sh
 (cd bundled-platform-data && sha256sum -c SHA256SUMS)

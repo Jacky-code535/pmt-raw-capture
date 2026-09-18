@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.6.2 (2026-09-18)
+
+- Present the repository as a finished toolkit with one product-focused README.
+- Keep project-owner explanations, planning notes and hardware validation records outside the public repository.
+- Limit the release package to product, user, support, development and test content.
+- Preserve all 0.6.1 capture, decode, analysis and compatibility behavior.
+
 ## 0.6.1 (2026-09-17)
 
 - Add a root requirement and acceptance index linked directly from the README.
