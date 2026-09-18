@@ -1,6 +1,6 @@
 # Release Process
 
-Version 0.6.3 GNR Edition is the current packaged release. Representative hardware
+Version 0.6.4 GNR Edition is the current packaged release. Representative hardware
 validation records are maintained outside the public repository.
 
 ## Local Gates
@@ -9,8 +9,8 @@ validation records are maintained outside the public repository.
 python3 -m unittest discover -s tests -v
 bash scripts/build-full-package.sh
 stage=$(mktemp -d)
-tar -xzf dist/pmt-raw-capture-0.6.3.tar.gz -C "$stage"
-cd "$stage/pmt-raw-capture-0.6.3"
+tar -xzf dist/pmt-raw-capture-0.6.4.tar.gz -C "$stage"
+cd "$stage/pmt-raw-capture-0.6.4"
 ./pmt-capture --version
 ./pmt-capture --help >/dev/null
 python3 -m compileall -q src

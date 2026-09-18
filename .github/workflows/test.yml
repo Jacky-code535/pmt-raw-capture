@@ -25,6 +25,7 @@ jobs:
           ./pmt-capture --version
           ./pmt-capture --help >/dev/null
           python3 -m compileall -q src
+          test -f REQUIREMENTS.md
           test ! -e tests
           test ! -e .github
           test ! -e scripts

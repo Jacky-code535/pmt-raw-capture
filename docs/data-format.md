@@ -1,6 +1,6 @@
 # Raw Bulk Format v1
 
-Collector source version: 0.6.3. The raw v1 contract and older captures remain supported.
+Collector source version: 0.6.4. The raw v1 contract and older captures remain supported.
 
 `FormatVersion` is `intel-pmt-local-bulk/v1`. Each snapshot is UTF-8 JSON inside
 gzip. All numeric payload bytes are preserved, including sentinel values.
@@ -14,7 +14,7 @@ common Redfish-style fields but is not a firmware-atomic Redfish snapshot.
 {
   "FormatVersion": "intel-pmt-local-bulk/v1",
   "Capture": {
-    "ToolVersion": "0.6.3",
+    "ToolVersion": "0.6.4",
     "RunId": "trial-001",
     "Endpoint": "lab-host",
     "Sequence": 1,
@@ -75,7 +75,7 @@ snapshot directory or export inputs, including dangling links, even when
 The advisory run lock coordinates this tool's commands; it cannot prevent
 other programs or users from changing files.
 
-## Decoder Handoff
+## Decoder Interface
 
 1. Decompress all snapshots, order by Sequence, and retain the real time gaps.
 2. Check Capture.Complete and Errors before interpreting each sample.

@@ -12,7 +12,7 @@ stage="${temporary}/${NAME}"
 
 mkdir -p "${stage}" "${DIST}"
 files=(
-    VERSION README.md SUPPORT.md docs/usage.md docs/data-format.md
+    VERSION README.md REQUIREMENTS.md SUPPORT.md docs/usage.md docs/data-format.md
     docs/changelog.md docs/service.md
     pmt-capture src/pmt_capture_cli.py src/pmt_bulk_capture.py
     src/pmt_analysis.py src/pmt_postprocess.py docs/offline.md

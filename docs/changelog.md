@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.6.4 (2026-09-18)
+
+- Add a formal product requirements specification to the repository and release package.
+- Define capture, integrity, archive, decode, analysis, compatibility and release requirements with stable IDs.
+- Use capture-host, analysis-host and archive terminology throughout user documentation.
+
 ## 0.6.3 (2026-09-18)
 
 - Reduce first use to one download, extraction and the direct capture-to-analysis path.
@@ -63,14 +69,14 @@
   directory and dangling links, even for partial exports. Prevent a successful
   verification from producing an archive that silently omits linked snapshots.
 - Add regression coverage for linked snapshots, directories and task files.
-- Expand the colleague-facing README with private-repository access, checksum
-  verification, acceptance criteria, permissions, handoff and troubleshooting.
+- Expand the user-facing README with repository access, verification,
+  acceptance criteria, permissions, archive transfer and troubleshooting.
 - Generate a SHA-256 checksum alongside each allowlisted source archive.
 - Preserve the raw bulk v1 format and existing command-line interface.
 
 ## 0.4.1
 
-- Consolidate colleague-facing instructions in one Chinese README: environment,
+- Consolidate user instructions in one Chinese README: environment,
   commands, parameters, result paths and optional script roles.
 - Keep duplicate guides out of the distribution and update service installation
   to use the same document list. Preserve CLI, menu and raw bulk v1 compatibility.

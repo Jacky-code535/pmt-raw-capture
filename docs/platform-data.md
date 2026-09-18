@@ -1,6 +1,6 @@
 # Platform XML
 
-The v0.6.3 release package contains the approved Intel PMT XML registry at
+The v0.6.4 release package contains the approved Intel PMT XML registry at
 platform-data commit `df82b1741dec619300707881114f6b17b5204f60`. Its license,
 source record and SHA-256 manifest are under `bundled-platform-data/`.
 

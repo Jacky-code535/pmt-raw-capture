@@ -1,12 +1,12 @@
 # 使用指南
 
-适用版本：0.6.3 GNR Edition。下载和首次采集见 [README](../README.md)。本页列出完整参数、任务状态和排障方法。
+适用版本：0.6.4 GNR Edition。下载和首次采集见 [README](../README.md)。本页列出完整参数、任务状态和排障方法。
 
 `--interval` 是相邻采样计划开始时间的间隔，不是读取一份快照所需的时间。例如三份、间隔 10 秒时，计划开始时间为第 0、10、20 秒；每份实际读取耗时由 `duration_ms` 报告。
 
 ## 环境要求
 
-版本 0.6.3 提供 `--cpu N`（Linux 逻辑 CPU 编号）、`--platform GNR` 和 `--xml-version REV`。CPU 必须在当前 cpuset 允许范围内；后台启动与续采保留选择，实际采样 CPU 集合记录在 `run.json` 的 `EffectiveCPUs`。平台与 XML 版本标签由操作者提供，BIOS 信息从 DMI 读取。离线命令见[离线工作流](offline.md)。
+版本 0.6.4 提供 `--cpu N`（Linux 逻辑 CPU 编号）、`--platform GNR` 和 `--xml-version REV`。CPU 必须在当前 cpuset 允许范围内；后台启动与续采保留选择，实际采样 CPU 集合记录在 `run.json` 的 `EffectiveCPUs`。平台与 XML 版本标签由操作者提供，BIOS 信息从 DMI 读取。离线命令见[离线工作流](offline.md)。
 
 | 要求 | 说明 |
 | --- | --- |
@@ -111,10 +111,10 @@ PMT 区域、GUID 或 Size 改变后应新建任务。主机重启后，CLI 任�
 | `results/<run-id>/collector.log` | 采集事件；后台启动输出另见 `console.log` |
 | `output/pmt-capture-<run-id>.tar.gz` | 交付包，含快照、日志、检查报告和 `result.txt` 摘要 |
 
-分析端按 `GUID + Size` 选择平台元数据并解码。交接时附上工具版本、平台与内核、实验负载、
+分析端按 `GUID + Size` 选择平台元数据并解码。归档传输时应记录工具版本、平台与内核、实验负载、
 采集时间范围及暂停记录。数据字段见 [数据格式](data-format.md)。
 
-结果包包含主机信息、实验备注和原始遥测，应通过团队的数据传输渠道交接，不提交到源码仓库、
+结果包包含主机信息、实验备注和原始遥测，应通过团队的数据传输渠道传输，不提交到源码仓库、
 Issues 或 Release。0.6.1 起，通过 `sudo` 执行 `pack` 时，生成的归档会自动归属最初调用
 sudo 的用户并使用 `0640` 权限，随后可直接以普通用户传输或解包。
 

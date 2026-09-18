@@ -1,8 +1,8 @@
 # GNR 兼容性
 
-## 0.6.3 支持声明
+## 0.6.4 支持声明
 
-0.6.3 的 collector 可发现 Linux Intel PMT sysfs 暴露的区域，但“可发现”不等于“已验证解码”。正式资格范围是 GNR 参考主机上观察并通过真实采集、精确 XML 匹配和内置解码的以下七组 schema。
+0.6.4 的 collector 可发现 Linux Intel PMT sysfs 暴露的区域，但“可发现”不等于“已验证解码”。正式资格范围是 GNR 参考主机上观察并通过真实采集、精确 XML 匹配和内置解码的以下七组 schema。
 
 平台数据版本：`df82b1741dec619300707881114f6b17b5204f60`
 
@@ -45,4 +45,4 @@ sudo ./pmt-capture inventory
 - bundled registry 中其他 mapping 是可选输入，不自动获得支持状态；
 - 物理 topology 不从 `telemN` 推断，需要显式 CSV；
 - counter、invalid marker 和空间聚合规则需要平台确认后显式配置；
-- SRF、OOB 和 SHC 不属于 0.6.3 运行范围。
+- SRF、OOB 和 SHC 不属于 0.6.4 运行范围。

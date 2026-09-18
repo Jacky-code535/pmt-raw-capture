@@ -1,6 +1,6 @@
 # Development
 
-Current release: 0.6.3 GNR Edition.
+Current release: 0.6.4 GNR Edition.
 
 ## Tests
 
@@ -20,7 +20,7 @@ and hardware qualification are separate platform tests.
 ./scripts/build-package.sh
 ```
 
-Output: `dist/pmt-raw-capture-0.6.3.tar.gz`. This developer package omits platform data.
+Output: `dist/pmt-raw-capture-0.6.4.tar.gz`. This developer package omits platform data.
 The approved release asset is built with `./scripts/build-full-package.sh`, which
 adds the fixed platform-data XML registry and replaces the archive with the full package.
 
@@ -32,8 +32,8 @@ Validate the extracted package:
 
 ```bash
 stage=$(mktemp -d)
-tar -xzf dist/pmt-raw-capture-0.6.3.tar.gz -C "$stage"
-cd "$stage/pmt-raw-capture-0.6.3"
+tar -xzf dist/pmt-raw-capture-0.6.4.tar.gz -C "$stage"
+cd "$stage/pmt-raw-capture-0.6.4"
 ./pmt-capture --version
 ./pmt-capture --help >/dev/null
 python3 -m compileall -q src

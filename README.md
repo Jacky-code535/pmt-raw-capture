@@ -2,7 +2,7 @@
 
 这是一个运行在 **GNR Linux 主机**上的命令行工具，用于完成 Intel PMT 数据的发现、采集、完整性检查、打包、XML 解码和统计分析。它直接读取 Linux PMT sysfs，不修改硬件配置；分析结果为 CSV 和 JSON，可继续用于 Excel、Python 或其他数据工具。
 
-当前版本：**0.6.3 GNR Edition**。运行需要 Python 3.7+、Bash、tar 和 gzip，不需要安装 pip 包、数据库服务或 Go 程序。正式验证范围见 [GNR 兼容性](docs/compatibility.md)。
+当前版本：**0.6.4 GNR Edition**。运行需要 Python 3.7+、Bash、tar 和 gzip，不需要安装 pip 包、数据库服务或 Go 程序。正式验证范围见 [GNR 兼容性](docs/compatibility.md)。
 
 ## 已实现功能
 
@@ -12,7 +12,7 @@
 | 数据采集 | `start` | 按时间间隔读取所有 PMT 区域 | 原始 gzip snapshot、运行清单和日志 |
 | 任务控制 | `status` / `stop` / `resume` | 查看、停止或继续前台及后台任务 | 任务状态 |
 | 完整性检查 | `verify` | 检查快照数量、结构、长度和 SHA-256 | 验证报告 |
-| 结果交接 | `pack` / `unpack` | 安全打包或解包一次采集 | 可传输的 tar.gz 结果包 |
+| 结果归档 | `pack` / `unpack` | 为跨主机离线分析创建或展开归档 | tar.gz 结果包 |
 | 平台验证 | `validate-platform` | 按精确 `GUID + Size` 检查 XML schema | JSON 验证报告 |
 | 解码分析 | `analyze` | 解码 raw，重建序列并计算统计和数据质量 | `decoded.csv`、`series.csv`、`summary.csv`、`data-quality.csv` |
 | 结果对比 | `compare` | 比较正常和异常 run 的统计结果 | 差异 CSV |
@@ -23,33 +23,33 @@
 inventory -> start -> verify -> validate-platform -> analyze
 ```
 
-本机直接分析时不需要 `pack` 和 `unpack`；这两个命令只用于传输采集结果。SRF、OOB/Redfish 采集、SHC 日志解析和自动故障归因不属于当前版本。
+本机分析可直接读取 run 目录。跨主机离线分析时，在采集端使用 `pack` 创建归档，在分析端使用 `unpack` 展开归档。SRF、OOB/Redfish 采集、SHC 日志解析和自动故障归因不属于当前版本。
 
 ## 第一次使用
 
 ### 1. 下载并解压
 
-下载 [`pmt-raw-capture-0.6.3.tar.gz`](https://github.com/Jacky-code535/pmt-raw-capture/releases/download/v0.6.3/pmt-raw-capture-0.6.3.tar.gz)，放到 GNR 主机后执行：
+下载 [`pmt-raw-capture-0.6.4.tar.gz`](https://github.com/Jacky-code535/pmt-raw-capture/releases/download/v0.6.4/pmt-raw-capture-0.6.4.tar.gz)，放到 GNR 主机后执行：
 
 ```bash
-mkdir -p "$HOME/pmt-0.6.3"
-cd "$HOME/pmt-0.6.3"
+mkdir -p "$HOME/pmt-0.6.4"
+cd "$HOME/pmt-0.6.4"
 
-curl -fL -O https://github.com/Jacky-code535/pmt-raw-capture/releases/download/v0.6.3/pmt-raw-capture-0.6.3.tar.gz
-tar -xzf pmt-raw-capture-0.6.3.tar.gz
-cd pmt-raw-capture-0.6.3
+curl -fL -O https://github.com/Jacky-code535/pmt-raw-capture/releases/download/v0.6.4/pmt-raw-capture-0.6.4.tar.gz
+tar -xzf pmt-raw-capture-0.6.4.tar.gz
+cd pmt-raw-capture-0.6.4
 
 ./pmt-capture --version
 ```
 
-预期版本输出为 `0.6.3`。如果主机不能访问 GitHub，可以先在其他机器下载，再将压缩包传到 GNR 主机。
+预期版本输出为 `0.6.4`。如果主机不能访问 GitHub，可以先在其他机器下载，再将压缩包传到 GNR 主机。
 
 ### 2. 完成首次三样本检查
 
 以下命令在同一台 GNR 主机采集三份数据并生成分析结果。将 `gnr-host` 改为便于识别的机器名称：
 
 ```bash
-cd "$HOME/pmt-0.6.3/pmt-raw-capture-0.6.3"
+cd "$HOME/pmt-0.6.4/pmt-raw-capture-0.6.4"
 RUN_ID="gnr-test-$(date -u +%Y%m%dT%H%M%SZ)"
 ENDPOINT="gnr-host"
 
@@ -72,7 +72,7 @@ sudo ./pmt-capture analyze --run-dir "results/$RUN_ID" --output "$ANALYSIS"
 
 完成后，分析结果位于 `analysis-<run-id>/`。其中 `decoded.csv` 是解码数据，`series.csv` 是时间序列，`summary.csv` 是统计摘要，`data-quality.csv` 是数据质量汇总。
 
-如果需要将采集结果交给其他机器或同事，再使用 `pack` 和 `unpack`。完整参数和排障方法见[使用指南](docs/usage.md)。
+跨主机离线分析的归档与解包命令见[使用指南](docs/usage.md)。
 
 ## 后台采集
 
@@ -131,6 +131,7 @@ sudo ./pmt-capture start --endpoint gnr-rack-01 --run-id run-20260910 \
 
 | 文档 | 内容 |
 | --- | --- |
+| [产品需求规格](REQUIREMENTS.md) | 功能需求、数据契约、兼容性和发布验收标准 |
 | [使用指南](docs/usage.md) | 参数、任务状态、结果文件与排障 |
 | [支持说明](SUPPORT.md) | 支持范围和问题反馈所需信息 |
 | [数据格式](docs/data-format.md) | 快照字段与解码接口 |
