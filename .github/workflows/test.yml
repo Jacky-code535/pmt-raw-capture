@@ -23,4 +23,8 @@ jobs:
           tar -xzf dist/pmt-raw-capture-$(tr -d '[:space:]' < VERSION).tar.gz -C "$RUNNER_TEMP/pmt-release"
           cd "$RUNNER_TEMP/pmt-release"/pmt-raw-capture-*
           ./pmt-capture --version
-          python3 -m unittest discover -s tests -v
+          ./pmt-capture --help >/dev/null
+          python3 -m compileall -q src
+          test ! -e tests
+          test ! -e .github
+          test ! -e scripts

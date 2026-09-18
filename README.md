@@ -2,7 +2,7 @@
 
 这是一个运行在 **GNR Linux 主机**上的命令行工具，用于完成 Intel PMT 数据的发现、采集、完整性检查、打包、XML 解码和统计分析。它直接读取 Linux PMT sysfs，不修改硬件配置；分析结果为 CSV 和 JSON，可继续用于 Excel、Python 或其他数据工具。
 
-当前版本：**0.6.2 GNR Edition**。运行需要 Python 3.7+、Bash、tar 和 gzip，不需要安装 pip 包、数据库服务或 Go 程序。正式验证范围见 [GNR 兼容性](docs/compatibility.md)。
+当前版本：**0.6.3 GNR Edition**。运行需要 Python 3.7+、Bash、tar 和 gzip，不需要安装 pip 包、数据库服务或 Go 程序。正式验证范围见 [GNR 兼容性](docs/compatibility.md)。
 
 ## 已实现功能
 
@@ -20,46 +20,37 @@
 核心工作流：
 
 ```text
-inventory -> start -> verify -> pack -> unpack
-          -> validate-platform -> analyze
+inventory -> start -> verify -> validate-platform -> analyze
 ```
 
-SRF、OOB/Redfish 采集、SHC 日志解析和自动故障归因不属于当前版本。详细边界见 [GNR 兼容性](docs/compatibility.md) 和[支持说明](SUPPORT.md)。
+本机直接分析时不需要 `pack` 和 `unpack`；这两个命令只用于传输采集结果。SRF、OOB/Redfish 采集、SHC 日志解析和自动故障归因不属于当前版本。
 
 ## 第一次使用
 
-### 1. 获取工具
+### 1. 下载并解压
 
-下载下面两个文件并放在 GNR 主机的同一目录。第一个是可运行工具包，第二个用于确认下载内容完整。
-
-- [`pmt-raw-capture-0.6.2.tar.gz`](https://github.com/Jacky-code535/pmt-raw-capture/releases/download/v0.6.2/pmt-raw-capture-0.6.2.tar.gz)
-- [`pmt-raw-capture-0.6.2.tar.gz.sha256`](https://github.com/Jacky-code535/pmt-raw-capture/releases/download/v0.6.2/pmt-raw-capture-0.6.2.tar.gz.sha256)
-
-在一个新目录中执行：
+下载 [`pmt-raw-capture-0.6.3.tar.gz`](https://github.com/Jacky-code535/pmt-raw-capture/releases/download/v0.6.3/pmt-raw-capture-0.6.3.tar.gz)，放到 GNR 主机后执行：
 
 ```bash
-mkdir -p "$HOME/pmt-0.6.2"
-cd "$HOME/pmt-0.6.2"
+mkdir -p "$HOME/pmt-0.6.3"
+cd "$HOME/pmt-0.6.3"
 
-curl -fL -O https://github.com/Jacky-code535/pmt-raw-capture/releases/download/v0.6.2/pmt-raw-capture-0.6.2.tar.gz
-curl -fL -O https://github.com/Jacky-code535/pmt-raw-capture/releases/download/v0.6.2/pmt-raw-capture-0.6.2.tar.gz.sha256
-sha256sum -c pmt-raw-capture-0.6.2.tar.gz.sha256
-tar -xzf pmt-raw-capture-0.6.2.tar.gz
-cd pmt-raw-capture-0.6.2
+curl -fL -O https://github.com/Jacky-code535/pmt-raw-capture/releases/download/v0.6.3/pmt-raw-capture-0.6.3.tar.gz
+tar -xzf pmt-raw-capture-0.6.3.tar.gz
+cd pmt-raw-capture-0.6.3
 
 ./pmt-capture --version
-bash scripts/smoke_test.sh
 ```
 
-预期：checksum 显示 `OK`，版本输出 `0.6.2`，smoke 显示 `Ran 2 tests` 和 `OK`。若主机不能访问 GitHub，可通过团队批准的渠道传输这两个文件，然后从 `sha256sum` 开始。
+预期版本输出为 `0.6.3`。如果主机不能访问 GitHub，可以先在其他机器下载，再将压缩包传到 GNR 主机。
 
 ### 2. 完成首次三样本检查
 
 以下命令在同一台 GNR 主机采集三份数据并生成分析结果。将 `gnr-host` 改为便于识别的机器名称：
 
 ```bash
-cd "$HOME/pmt-0.6.2/pmt-raw-capture-0.6.2"
-RUN_ID="gnr-smoke-$(date -u +%Y%m%dT%H%M%SZ)"
+cd "$HOME/pmt-0.6.3/pmt-raw-capture-0.6.3"
+RUN_ID="gnr-test-$(date -u +%Y%m%dT%H%M%SZ)"
 ENDPOINT="gnr-host"
 
 # 发现 PMT 区域
@@ -69,31 +60,19 @@ sudo ./pmt-capture inventory | tee "inventory-$RUN_ID.json"
 sudo ./pmt-capture start --endpoint "$ENDPOINT" --platform GNR \
   --run-id "$RUN_ID" --interval 2 --samples 3
 
-# 检查并打包
+# 检查采集结果
 sudo ./pmt-capture verify --run-dir "results/$RUN_ID"
-sudo ./pmt-capture pack --run-dir "results/$RUN_ID" --output packages
-ARCHIVE="packages/pmt-capture-$RUN_ID.tar.gz"
-test -r "$ARCHIVE"
 
-# 解包、验证平台并分析
-REPLAY="replay-$RUN_ID"
+# 验证平台并分析
 ANALYSIS="analysis-$RUN_ID"
-./pmt-capture unpack "$ARCHIVE" --output "$REPLAY"
-./pmt-capture validate-platform --run-dir "$REPLAY/$RUN_ID" \
+sudo ./pmt-capture validate-platform --run-dir "results/$RUN_ID" \
   | tee "validation-$RUN_ID.json"
-./pmt-capture analyze --run-dir "$REPLAY/$RUN_ID" --output "$ANALYSIS"
-
-# 检查四个核心输出非空
-test -s "$ANALYSIS/decoded.csv"
-test -s "$ANALYSIS/series.csv"
-test -s "$ANALYSIS/summary.csv"
-test -s "$ANALYSIS/data-quality.csv"
-printf 'PASS: %s\n' "$ANALYSIS"
+sudo ./pmt-capture analyze --run-dir "results/$RUN_ID" --output "$ANALYSIS"
 ```
 
-采集期间应看到三行 `"complete":true`。`verify` 应显示 `AllObservedFilesValid: true` 和 `RequestedSampleCountReached: true`；`validate-platform` 应显示 `mapping_valid: true` 和 `valid: true`；最后应打印 `PASS`。不同 GNR inventory 的 decoded 行数可能不同，不应硬编码为 AVC01 的行数。
+完成后，分析结果位于 `analysis-<run-id>/`。其中 `decoded.csv` 是解码数据，`series.csv` 是时间序列，`summary.csv` 是统计摘要，`data-quality.csv` 是数据质量汇总。
 
-如果失败，保留 `inventory-*.json`、`validation-*.json`、`results/<run-id>/collector.log` 和终端错误。不要用相近 GUID 的 XML 代替精确映射。排查方法见[使用指南](docs/usage.md)和[支持说明](SUPPORT.md)。
+如果需要将采集结果交给其他机器或同事，再使用 `pack` 和 `unpack`。完整参数和排障方法见[使用指南](docs/usage.md)。
 
 ## 后台采集
 
@@ -153,15 +132,13 @@ sudo ./pmt-capture start --endpoint gnr-rack-01 --run-id run-20260910 \
 | 文档 | 内容 |
 | --- | --- |
 | [使用指南](docs/usage.md) | 参数、任务状态、结果文件与排障 |
-| [支持说明](SUPPORT.md) | 支持范围、问题反馈所需信息和数据分发边界 |
+| [支持说明](SUPPORT.md) | 支持范围和问题反馈所需信息 |
 | [数据格式](docs/data-format.md) | 快照字段与解码接口 |
 | [离线工作流](docs/offline.md) | XML 解码、序列重建、统计、拓扑和实验对齐 |
 | [架构](docs/architecture.md) | 模块边界、数据流与兼容性 |
 | [平台数据](docs/platform-data.md) | XML 输入要求、验证和解码范围 |
 | [GNR 兼容性](docs/compatibility.md) | 已验证 GUID、XML 版本和支持边界 |
-| [发布流程](docs/release-process.md) | 包构建、依赖边界和发布审批 |
 | [服务部署](docs/service.md) | systemd 安装、开机启动和菜单操作 |
-| [开发说明](docs/development.md) | 测试、构建与发布 |
 | [更新记录](docs/changelog.md) | 各版本变更 |
 
-命令帮助：`./pmt-capture --help`。正式发布包包含批准的 XML；raw 和分析结果始终与工具包分开保存。
+命令帮助：`./pmt-capture --help`。

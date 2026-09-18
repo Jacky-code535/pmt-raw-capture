@@ -50,5 +50,4 @@ archive="${ROOT}/dist/${NAME}.tar.gz"
 temporary_archive="${archive}.tmp"
 tar -C "${temporary}" -czf "${temporary_archive}" "${NAME}"
 mv "${temporary_archive}" "${archive}"
-(cd "${ROOT}/dist" && sha256sum "${NAME}.tar.gz" >"${NAME}.tar.gz.sha256")
 printf '%s\n' "${archive}"

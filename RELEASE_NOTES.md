@@ -1,15 +1,13 @@
-# v0.6.2 GNR Edition
+# v0.6.3 GNR Edition
 
-Intel PMT Capture and Analysis Toolkit 0.6.2 为 GNR Linux 提供一套命令行工作流，
+Intel PMT Capture and Analysis Toolkit 0.6.3 为 GNR Linux 提供一套命令行工作流，
 覆盖 PMT 设备发现、原始数据采集、完整性检查、结果打包、XML 验证、指标解码、
 时间序列重建和统计分析。
 
 ## Download
 
-请下载以下两个文件：
-
-- `pmt-raw-capture-0.6.2.tar.gz`：包含已批准 XML registry 的可运行工具包；
-- `pmt-raw-capture-0.6.2.tar.gz.sha256`：用于验证下载内容的 checksum。
+下载 `pmt-raw-capture-0.6.3.tar.gz`，解压后即可运行。工具包包含采集、解码、
+分析程序以及 GNR 所需的 XML registry。
 
 第一次使用请从 [README](https://github.com/Jacky-code535/pmt-raw-capture#readme)
 开始，完整命令参数和排障方法见
@@ -24,12 +22,9 @@ Intel PMT Capture and Analysis Toolkit 0.6.2 为 GNR Linux 提供一套命令行
 
 ## Support boundary
 
-正式验证范围是 AVC01 上观察到的七组精确 `GUID + Size` schema。发布包中存在 XML
-不代表对应平台已经通过资格验证。长时间采集前请查看
+正式验证范围是兼容性矩阵中的七组精确 `GUID + Size` schema。长时间采集前请查看
 [GNR 兼容性矩阵](https://github.com/Jacky-code535/pmt-raw-capture/blob/main/docs/compatibility.md)。
 
-本版本提供独立 SHA-256 文件。通过 `sudo pack` 生成的结果包会以 `0640` 权限交还给
-原 sudo 用户，后续可直接由该用户解包和分析。
-
-0.6.2 将公开仓库和下载包整理为产品内容：README、用户文档、运行源码、配置样例、
-服务脚本和自动测试。项目计划、内部验收过程和项目所有者说明不再作为工具包内容发布。
+0.6.3 简化了首次使用流程：只下载一个压缩包，本机采集后可直接验证和分析；只有
+需要传输结果时才使用 `pack` 和 `unpack`。下载包只包含运行程序、用户文档、配置
+样例和可选服务脚本，开发测试与构建资料保留在源码仓库。

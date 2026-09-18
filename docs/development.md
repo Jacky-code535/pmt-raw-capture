@@ -1,6 +1,6 @@
 # Development
 
-Current release: 0.6.2 GNR Edition.
+Current release: 0.6.3 GNR Edition.
 
 ## Tests
 
@@ -20,10 +20,9 @@ and hardware qualification are separate platform tests.
 ./scripts/build-package.sh
 ```
 
-Output: `dist/pmt-raw-capture-0.6.2.tar.gz`. This developer package omits platform data.
+Output: `dist/pmt-raw-capture-0.6.3.tar.gz`. This developer package omits platform data.
 The approved release asset is built with `./scripts/build-full-package.sh`, which
-adds the fixed platform-data XML registry, replaces the archive with the full package,
-and writes the adjacent `.tar.gz.sha256` verification file.
+adds the fixed platform-data XML registry and replaces the archive with the full package.
 
 The archive uses the same layout as the repository. Its file list is defined in
 `scripts/build-package.sh`; new distributed files must be added there. Generated
@@ -33,10 +32,11 @@ Validate the extracted package:
 
 ```bash
 stage=$(mktemp -d)
-tar -xzf dist/pmt-raw-capture-0.6.2.tar.gz -C "$stage"
-cd "$stage/pmt-raw-capture-0.6.2"
+tar -xzf dist/pmt-raw-capture-0.6.3.tar.gz -C "$stage"
+cd "$stage/pmt-raw-capture-0.6.3"
 ./pmt-capture --version
-python3 -m unittest discover -s tests -v
+./pmt-capture --help >/dev/null
+python3 -m compileall -q src
 ```
 
 ## Release
@@ -44,7 +44,7 @@ python3 -m unittest discover -s tests -v
 1. Update `VERSION`, `TOOL_VERSION` and versioned documentation links.
 2. Run tests and build the package.
 3. Commit and push; wait for CI to pass.
-4. Create the version tag and GitHub Release, attaching the `.tar.gz` and `.tar.gz.sha256` from `dist/`.
+4. Create the version tag and GitHub Release, attaching the `.tar.gz` from `dist/`.
 5. Verify the README download link against the published asset.
 
 ## Distribution
@@ -58,9 +58,9 @@ The optional `--decoder` compatibility path still accepts an external adapter:
 one raw envelope on stdin, ordered `{index,result}` records on stdout, with exact
 GUID/size confirmation. Optional `metrics[].known_invalid` is preserved.
 
-Run `bash scripts/smoke_test.sh` for the hardware-independent integrated workflow.
-The package builder recursively includes Python files under `src/pmt` and synthetic
-fixtures under `tests/fixtures`; all other distributed files remain explicit.
+The package builder recursively includes Python files under `src/pmt`; all other
+distributed files remain explicit. Tests and build automation remain in the source
+repository and are not included in the user package.
 Release authorization and dependency handling are described in
 [release process](release-process.md).
 

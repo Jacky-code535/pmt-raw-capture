@@ -1,6 +1,6 @@
 # Release Process
 
-Version 0.6.2 GNR Edition is the current packaged release. Representative hardware
+Version 0.6.3 GNR Edition is the current packaged release. Representative hardware
 validation records are maintained outside the public repository.
 
 ## Local Gates
@@ -8,12 +8,12 @@ validation records are maintained outside the public repository.
 ```bash
 python3 -m unittest discover -s tests -v
 bash scripts/build-full-package.sh
-cd dist && sha256sum -c pmt-raw-capture-0.6.2.tar.gz.sha256 && cd ..
 stage=$(mktemp -d)
-tar -xzf dist/pmt-raw-capture-0.6.2.tar.gz -C "$stage"
-cd "$stage/pmt-raw-capture-0.6.2"
-python3 -m unittest discover -s tests -v
-bash scripts/smoke_test.sh
+tar -xzf dist/pmt-raw-capture-0.6.3.tar.gz -C "$stage"
+cd "$stage/pmt-raw-capture-0.6.3"
+./pmt-capture --version
+./pmt-capture --help >/dev/null
+python3 -m compileall -q src
 (cd bundled-platform-data && sha256sum -c SHA256SUMS)
 ```
 
@@ -30,8 +30,7 @@ this repository and Release.
 
 After approval, update VERSION, the collector version constant and release notes;
 run all local gates and the supported Python CI matrix; review the exact source
-diff and dependency pin; then publish the approved tool archive together with the
-generated `.sha256` file and verify both links.
+diff and dependency pin; then publish the approved tool archive and verify its link.
 Updating the platform pin is a separate reviewed change requiring run-scoped
 validation and representative payload replay. Do not use an unpinned remote HEAD.
 

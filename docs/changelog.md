@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.6.3 (2026-09-18)
+
+- Reduce first use to one download, extraction and the direct capture-to-analysis path.
+- Remove the separate download checksum asset and user-side smoke-test requirement.
+- Keep tests, CI, build scripts and release documents in the source repository instead of the user package.
+- Preserve snapshot integrity checks and bundled platform-data validation inside the tool.
+
 ## 0.6.2 (2026-09-18)
 
 - Present the repository as a finished toolkit with one product-focused README.

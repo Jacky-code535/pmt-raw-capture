@@ -20,8 +20,7 @@ class FieldKitTest(unittest.TestCase):
                     self.assertTrue((path.parent / target).is_file(), target)
         readme = (ROOT.parent / "README.md").read_text(encoding="utf-8")
         self.assertIn("SUPPORT.md", readme)
-        self.assertIn("pmt-raw-capture-0.6.2.tar.gz", readme)
-        self.assertIn("sha256sum -c", readme)
+        self.assertIn("pmt-raw-capture-0.6.3.tar.gz", readme)
         self.assertNotIn("REQUIREMENTS.md", readme)
         self.assertNotIn("colleague-guide.md", readme)
 
@@ -33,6 +32,10 @@ class FieldKitTest(unittest.TestCase):
         ):
             self.assertFalse((root / name).exists(), name)
             self.assertNotIn(name, (root / "scripts/build-package.sh").read_text(encoding="utf-8"))
+        package_script = (root / "scripts/build-package.sh").read_text(encoding="utf-8")
+        for name in ("tests/", ".github/", "scripts/smoke_test.sh", "RELEASE_NOTES.md"):
+            self.assertNotIn(name, package_script)
+        self.assertNotIn(".tar.gz.sha256", (root / "scripts/build-full-package.sh").read_text(encoding="utf-8"))
 
     def test_service_package_paths(self):
         result = subprocess.run(
