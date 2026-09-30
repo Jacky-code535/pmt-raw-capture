@@ -2,7 +2,7 @@
 
 这是一个运行在 **GNR Linux 主机**上的命令行工具，用于完成 Intel PMT 数据的发现、采集、完整性检查、打包、XML 解码和统计分析。它直接读取 Linux PMT sysfs，不修改硬件配置；分析结果为 CSV 和 JSON，可继续用于 Excel、Python 或其他数据工具。
 
-当前版本：**0.6.4 GNR Edition**。运行需要 Python 3.7+、Bash、tar 和 gzip，不需要安装 pip 包、数据库服务或 Go 程序。正式验证范围见 [GNR 兼容性](docs/compatibility.md)。
+当前版本：**0.7.0 GNR Edition**。采集与基础分析需要 Python 3.7+、Bash、tar 和 gzip，不需要安装 pip 包、数据库服务或 Go 程序。可选 Excel 与逐 Core 报告需要在分析端使用 Python 3.8+ 并安装 XlsxWriter。正式验证范围见 [GNR 兼容性](docs/compatibility.md)。
 
 ## 已实现功能
 
@@ -16,6 +16,8 @@
 | 平台验证 | `validate-platform` | 按精确 `GUID + Size` 检查 XML schema | JSON 验证报告 |
 | 解码分析 | `analyze` | 解码 raw，重建序列并计算统计和数据质量 | `decoded.csv`、`series.csv`、`summary.csv`、`data-quality.csv` |
 | 结果对比 | `compare` | 比较正常和异常 run 的统计结果 | 差异 CSV |
+| 指标报告（可选） | `report` | 按 JSON 计算相邻样本指标并生成 Excel 原生图表 | Core/Socket/System 指标 CSV、统计摘要、xlsx |
+| 采集后自动分析（可选） | `analyze --report` | 一次执行 raw 验证、XML 解码、JSON 指标计算和逐 Core 可视化 | 分析目录及 `<分析目录>-report/逐Core看板.html` |
 
 核心工作流：
 
@@ -24,32 +26,33 @@ inventory -> start -> verify -> validate-platform -> analyze
 ```
 
 本机分析可直接读取 run 目录。跨主机离线分析时，在采集端使用 `pack` 创建归档，在分析端使用 `unpack` 展开归档。SRF、OOB/Redfish 采集、SHC 日志解析和自动故障归因不属于当前版本。
+需要逐 Core 图表的完整后处理命令是 `analyze --report`。报告阶段在离线分析端执行，不改变采集端的软件要求。
 
 ## 第一次使用
 
 ### 1. 下载并解压
 
-下载 [`pmt-raw-capture-0.6.4.tar.gz`](https://github.com/Jacky-code535/pmt-raw-capture/releases/download/v0.6.4/pmt-raw-capture-0.6.4.tar.gz)，放到 GNR 主机后执行：
+下载 [`pmt-raw-capture-0.7.0.tar.gz`](https://github.com/Jacky-code535/pmt-raw-capture/releases/download/v0.7.0/pmt-raw-capture-0.7.0.tar.gz)，放到 GNR 主机后执行：
 
 ```bash
-mkdir -p "$HOME/pmt-0.6.4"
-cd "$HOME/pmt-0.6.4"
+mkdir -p "$HOME/pmt-0.7.0"
+cd "$HOME/pmt-0.7.0"
 
-curl -fL -O https://github.com/Jacky-code535/pmt-raw-capture/releases/download/v0.6.4/pmt-raw-capture-0.6.4.tar.gz
-tar -xzf pmt-raw-capture-0.6.4.tar.gz
-cd pmt-raw-capture-0.6.4
+curl -fL -O https://github.com/Jacky-code535/pmt-raw-capture/releases/download/v0.7.0/pmt-raw-capture-0.7.0.tar.gz
+tar -xzf pmt-raw-capture-0.7.0.tar.gz
+cd pmt-raw-capture-0.7.0
 
 ./pmt-capture --version
 ```
 
-预期版本输出为 `0.6.4`。如果主机不能访问 GitHub，可以先在其他机器下载，再将压缩包传到 GNR 主机。
+预期版本输出为 `0.7.0`。如果主机不能访问 GitHub，可以先在其他机器下载，再将压缩包传到 GNR 主机。
 
 ### 2. 完成首次三样本检查
 
 以下命令在同一台 GNR 主机采集三份数据并生成分析结果。将 `gnr-host` 改为便于识别的机器名称：
 
 ```bash
-cd "$HOME/pmt-0.6.4/pmt-raw-capture-0.6.4"
+cd "$HOME/pmt-0.7.0/pmt-raw-capture-0.7.0"
 RUN_ID="gnr-test-$(date -u +%Y%m%dT%H%M%SZ)"
 ENDPOINT="gnr-host"
 
@@ -71,6 +74,7 @@ sudo ./pmt-capture analyze --run-dir "results/$RUN_ID" --output "$ANALYSIS"
 ```
 
 完成后，分析结果位于 `analysis-<run-id>/`。其中 `decoded.csv` 是解码数据，`series.csv` 是时间序列，`summary.csv` 是统计摘要，`data-quality.csv` 是数据质量汇总。
+需要逐 Core 报告时，可在完成采集后，在配有 Python 3.8+ 与 XlsxWriter 的离线主机以 `analyze --report` 代替最后一条 `analyze`；若运行目录只有 root 可以读取，须以具有读权限的账户执行且确认该账户使用的 Python 也安装了可选依赖。示例见下文“文档”的报告命令。
 
 跨主机离线分析的归档与解包命令见[使用指南](docs/usage.md)。
 
@@ -128,6 +132,21 @@ sudo ./pmt-capture start --endpoint gnr-rack-01 --run-id run-20260910 \
 指标集合随平台 XML 变化，具体字段名以解码结果为准。拓扑视图不隐式求和，`valid_count` 不代表硬件健康；平台无效标记需要显式策略。XML 未定义的 FIVR 派生状态不会自动生成。
 
 ## 文档
+
+离线分析端使用 Python 3.8+ 安装可选依赖后执行：
+
+```bash
+python3 -m venv .venv
+. .venv/bin/activate
+python3 -m pip install -r requirements-report.txt
+./pmt-capture analyze --run-dir results/run-20260910 \
+  --output analysis/run-20260910 --report
+# 打开 analysis/run-20260910-report/逐Core看板.html
+```
+
+上述命令会先验证 raw 并按 XML 解码，再自动按 JSON 配置生成所有 Core 指标、Excel 和交互式 HTML，不要求用户手工操作 CSV。正式下载包内置批准的 XML registry，无须指定 `--metadata`；源码/基础包须补 `--metadata /path/to/pmt.xml`。在离线分析主机运行，采集端无需安装依赖；已有分析结果可单独运行 `./pmt-capture report --analysis-dir analysis/run-20260910 --output reports/run-20260910`，也适合报告阶段出错后重试。报告按序号处理解码结果并使用 SQLite 暂存统计。600 份真实硬件数据的全链路解码和性能仍须在目标主机验证。
+
+报告包含温度、Core usage 实验性累计量及增量、PVP counter 增量/速率、频率与电压桶加权估计、C6 占比和频率/温度/电压分布。输出中的 `逐Core看板.html` 可选择 aggregator 与任意 XML 本地 Core，查看七项关键趋势，每槽位最多约 600 个真实采样点；全量指标和逐行质量原因保存在 Core/Socket/System CSV，`metric-quality.csv` 汇总各类质量原因数量，Excel 包含全部 Core 宽表及代表性图表。首样本及无效区间留空；物理 Socket 视图需要明确的 core 拓扑映射。在线 dashboard 使用 Prometheus 滚动窗口，并非本工具的离线 CSV 输入；直方图时间尺度尚待平台确认，相关结果标为 provisional。配置、聚合规则和采样耗时测量见[指标与 Excel 报告](docs/report.md)。采集端仍无需安装第三方 Python 包。
 
 | 文档 | 内容 |
 | --- | --- |

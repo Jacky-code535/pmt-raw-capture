@@ -45,6 +45,16 @@ class EngineerCliTest(unittest.TestCase):
             self.assertIn("cli/collector.log", bundle.getnames())
             self.assertEqual(len([name for name in bundle.getnames() if "/snapshots/" in name]), 3)
 
+    def test_cycle_timing_includes_persistent_capture(self):
+        run_dir = self.start("timing")
+        records = capture.read_manifest(run_dir / "collector.log")
+        cycles = [record for record in records if record["Event"] == "cycle_timing"]
+        self.assertEqual([record["Sequence"] for record in cycles], [1, 2, 3])
+        for record in cycles:
+            self.assertGreaterEqual(record["CycleMilliseconds"] + 0.001, record["ReadMilliseconds"])
+            self.assertGreaterEqual(record["CPUMilliseconds"], 0)
+            self.assertGreaterEqual(record["StartLatenessMilliseconds"], 0)
+
     def test_sudo_pack_returns_archive_to_calling_user(self):
         run_dir = self.start("sudo-pack")
         environment = {"SUDO_UID": "1000", "SUDO_GID": "1001"}

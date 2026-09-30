@@ -267,11 +267,20 @@ def build_parser() -> argparse.ArgumentParser:
     analyze.add_argument("--failure-before", type=float, default=5.0)
     analyze.add_argument("--failure-after", type=float, default=5.0)
     analyze.add_argument("--allow-partial", action="store_true")
+    analyze.add_argument("--report", action="store_true", help="after decoding, generate JSON-defined metrics and an interactive per-Core report (requires XlsxWriter)")
+    analyze.add_argument("--report-output", type=Path, help="new report directory; default: <analysis output>-report")
+    analyze.add_argument("--report-metrics", type=Path, default=Path(__file__).resolve().parents[2] / "config/metrics-gnr.json", help="JSON metric definitions for --report")
+    analyze.add_argument("--report-topology", type=Path, help="confirmed physical Core mapping for Socket report views")
     compare = commands.add_parser("compare", help="compare matching series in two offline analysis summaries")
     compare.add_argument("--baseline", required=True, type=Path, help="baseline analysis directory")
     compare.add_argument("--candidate", required=True, type=Path, help="candidate analysis directory")
     compare.add_argument("--output", required=True, type=Path, help="new CSV path")
     compare.add_argument("--by-test", action="store_true", help="match phase and test item instead of whole-run statistics")
+    report = commands.add_parser("report", help="compute JSON-defined metrics and create an Excel workbook with charts")
+    report.add_argument("--analysis-dir", required=True, type=Path, help="existing analysis directory with decoded.csv and provenance")
+    report.add_argument("--output", required=True, type=Path, help="new output directory outside the analysis input")
+    report.add_argument("--metrics", type=Path, default=Path(__file__).resolve().parents[2] / "config/metrics-gnr.json")
+    report.add_argument("--topology", type=Path, help="confirmed core mapping CSV: endpoint,aggregator,core,socket,die,physical_core,enabled")
     return parser
 
 
@@ -292,9 +301,15 @@ def main(argv=None) -> int:
     if not args.command:
         parser.print_help()
         return 0
+    if args.command == "analyze" and not args.report and (args.report_output or args.report_topology):
+        parser.error("--report-output and --report-topology require --report")
     try:
         if args.command == "inventory":
             return capture.command_inventory(args)
+        if args.command == "report":
+            from pmt.report import generate_report
+            print(json.dumps(generate_report(args.analysis_dir, args.output, args.metrics, args.topology), indent=2))
+            return 0
         if args.command == "dump":
             return capture.command_dump(args)
         if args.command == "unpack":
@@ -320,6 +335,11 @@ def main(argv=None) -> int:
                 result = postprocess.archive_run(args.run_dir.resolve(), args.output, args.allow_partial)
             elif args.command == "analyze":
                 result = postprocess.analyze_run(args)
+                if args.report:
+                    from pmt.report import generate_report
+                    report_output = args.report_output or args.output.with_name(args.output.name + "-report")
+                    result["report"] = generate_report(args.output, report_output, args.report_metrics, args.report_topology)
+                    result["report"]["core_view"] = str(report_output / "逐Core看板.html")
             else:
                 result = postprocess.compare_runs(args)
             print(json.dumps(result, indent=2))

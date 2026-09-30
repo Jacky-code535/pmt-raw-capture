@@ -21,7 +21,8 @@ class FieldKitTest(unittest.TestCase):
         readme = (ROOT.parent / "README.md").read_text(encoding="utf-8")
         self.assertIn("SUPPORT.md", readme)
         self.assertIn("REQUIREMENTS.md", readme)
-        self.assertIn("pmt-raw-capture-0.6.4.tar.gz", readme)
+        version = (ROOT.parent / "VERSION").read_text().strip()
+        self.assertIn("pmt-raw-capture-{}.tar.gz".format(version), readme)
         self.assertNotIn("colleague-guide.md", readme)
 
     def test_public_product_boundary(self):

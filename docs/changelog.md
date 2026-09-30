@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.7.0 (2026-09-30)
+
+- Add optional `analyze --report` and `report` commands for JSON-defined Core metrics, quality CSV, Excel workbook and selectable offline Core trends.
+- Stream derived rows by capture sequence and stage statistics in SQLite; partition wide Excel tables, retain complete CSV data and bound interactive chart points.
+- Record capture cycle wall time and CPU time without changing the raw v1 format.
+- Retain the GNR schema qualification boundary and provisional histogram interpretation from 0.6.4.
+
 ## 0.6.4 (2026-09-18)
 
 - Add a formal product requirements specification to the repository and release package.

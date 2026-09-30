@@ -33,7 +33,7 @@ from typing import Any, Dict, Iterable, List, Optional, Tuple
 
 
 FORMAT_VERSION = "intel-pmt-local-bulk/v1"
-TOOL_VERSION = "0.6.4"
+TOOL_VERSION = "0.7.0"
 DEFAULT_SYSFS = Path("/sys/class/intel_pmt")
 DEFAULT_OUTPUT_ROOT = Path("./results")
 PMT_ENTRY = re.compile(r"^telem([0-9]+)$")
@@ -485,6 +485,8 @@ def continue_capture(
         wait_until(due)
         if STOP_REQUESTED:
             break
+        cycle_started = time.monotonic()
+        cycle_cpu_started = time.process_time()
         record = capture_bundle(
             endpoint=args.endpoint,
             run_id=str(state["RunId"]),
@@ -519,6 +521,15 @@ def continue_capture(
                 separators=(",", ":"),
             ),
             flush=True,
+        )
+        cycle_finished = time.monotonic()
+        log_event(
+            run_dir, "cycle_timing", Sequence=sequence,
+            ReadMilliseconds=record["DurationMilliseconds"],
+            CycleMilliseconds=(cycle_finished - cycle_started) * 1000,
+            CPUMilliseconds=(time.process_time() - cycle_cpu_started) * 1000,
+            StartLatenessMilliseconds=max(0.0, cycle_started - due) * 1000,
+            TimingScope="capture through state persistence and stdout; excludes this timing log append",
         )
 
     status = "completed" if completed_files >= requested_samples else "stopped"

@@ -1,6 +1,6 @@
 # Release Process
 
-Version 0.6.4 GNR Edition is the current packaged release. Representative hardware
+Version 0.7.0 GNR Edition is the packaged release. Representative hardware
 validation records are maintained outside the public repository.
 
 ## Local Gates
@@ -9,8 +9,8 @@ validation records are maintained outside the public repository.
 python3 -m unittest discover -s tests -v
 bash scripts/build-full-package.sh
 stage=$(mktemp -d)
-tar -xzf dist/pmt-raw-capture-0.6.4.tar.gz -C "$stage"
-cd "$stage/pmt-raw-capture-0.6.4"
+tar -xzf dist/pmt-raw-capture-0.7.0.tar.gz -C "$stage"
+cd "$stage/pmt-raw-capture-0.7.0"
 ./pmt-capture --version
 ./pmt-capture --help >/dev/null
 python3 -m compileall -q src
@@ -25,6 +25,13 @@ CI uses synthetic data and builds the developer package. The approved release pa
 is built in the authorized environment from the pinned platform-data commit, then
 validated on representative hardware before upload. Raw hardware data stays outside
 this repository and Release.
+
+For optional reporting, run `scripts/qualify-report-scale.py --samples 600
+--output-root /path/to/new-directory` on an offline host with Python 3.8+ and
+XlsxWriter installed. The synthetic decoded dataset checks the 10,828,800-row
+report path; it does not independently qualify 600 raw hardware snapshots or
+the platform's histogram units. Real decoded run smoke validation and the
+release-asset extraction check remain separate gates.
 
 ## Approved Publication
 
