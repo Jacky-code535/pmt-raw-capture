@@ -1,5 +1,7 @@
 # 指标与看板
 
+命令与目录流程见 [操作指南](guide.md)。本文只说明 **decoded / metrics / HTML** 的数据契约与计算公式。
+
 0.8.0 默认流程：raw → XML 解码 → decoded 长表 → metrics 长表 → Core HTML。全程使用 Python 标准库，默认不生成 Excel。
 
 ## 长表契约
@@ -33,11 +35,7 @@ metrics 的名称如 `C0.pvp64_rate`，额外记录 `core, physical_core, interv
 
 ## 看板
 
-```bash
-./pmt-capture view --input analysis/trial-001/metrics.csv --output core-view.html
-```
-
-看板生成只读取这一张 CSV，不依赖 raw、XML、摘要 CSV、Excel 或外部服务。HTML 内嵌选定数据，JavaScript 通过 SVG polyline 和 circle 绘图；无需 CDN，移动端自动单列显示。
+`view` 命令示例见 [操作指南](guide.md)。看板生成只读取 metrics CSV，不依赖 raw、XML、摘要 CSV、Excel 或外部服务。HTML 内嵌选定数据，JavaScript 通过 SVG polyline 和 circle 绘图；无需 CDN，移动端自动单列显示。
 
 默认显示温度、usage 增量、PVP64/PVP1024 速率、含 C6 频率估计、电压估计和 C6 桶占比。横轴使用实际 UTC 时间，悬停点显示时间、序号、值与质量。每条序列最多约 600 个实际样本点，保留末点；跨被省略的无效点不连接折线。降采样不保留所有短峰值，完整数据以 metrics CSV 为准。
 

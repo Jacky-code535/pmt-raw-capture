@@ -96,4 +96,4 @@ The legacy `ExpectedDurationSeconds` estimate remains unchanged for compatibilit
 binaries, original v1 snapshots, metadata and content fingerprints. It never replaces
 the original run. `analyze` uses each aggregator's `CapturedAt`, freezes the XML files
 needed by exact GUID+Size mappings, and records analyzer/decoder provenance. See the
-[offline workflow](offline.md) for output and statistical contracts.
+[操作指南](guide.md) for workflow; [指标与看板](report.md) for metrics contracts.
