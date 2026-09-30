@@ -1,0 +1,9 @@
+{
+  "output": "analysis/repo-example-20260930",
+  "decoded_rows": 160490,
+  "report": {
+    "metric_rows": 90240,
+    "metrics": "analysis/repo-example-20260930/metrics.csv",
+    "core_view": "analysis/repo-example-20260930/dashboard.html"
+  }
+}

@@ -4,6 +4,7 @@
 
 - Merge user-facing CLI documentation into [操作指南](guide.md); remove stub `usage.md` / `offline.md`.
 - Drop `RELEASE_NOTES.md` (use this changelog and GitHub Releases); slim user package (no architecture/platform-data docs or `requirements-report.txt` in tar).
+- Add `examples/avc01-repo-example-20260930/` (avc01 end-to-end run artifacts and README).
 - Make default analyze produce only decoded.csv, long-form metrics.csv and dashboard.html, plus provenance.
 - Reuse explicit adjacent-interval Core formulas; remove default multi-level views, event/statistical CSVs and Excel dependencies.
 - Add duration-seconds sampling plans and CSV-only view regeneration; retain old analysis through --legacy-analysis.

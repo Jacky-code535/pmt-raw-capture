@@ -1,0 +1,6 @@
+{"sequence":1,"file":"bulk-000001-20260930T140750.641103Z.json.gz","complete":true,"duration_ms":157.666}
+{"sequence":2,"file":"bulk-000002-20260930T140752.639540Z.json.gz","complete":true,"duration_ms":155.93}
+{"sequence":3,"file":"bulk-000003-20260930T140754.645092Z.json.gz","complete":true,"duration_ms":161.509}
+{"sequence":4,"file":"bulk-000004-20260930T140756.642830Z.json.gz","complete":true,"duration_ms":159.228}
+{"sequence":5,"file":"bulk-000005-20260930T140758.639875Z.json.gz","complete":true,"duration_ms":156.292}
+/root/pmt-example-run/pmt-raw-capture-0.8.0/results/repo-example-20260930

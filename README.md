@@ -190,6 +190,7 @@ sudo ./pmt-capture verify --run-dir results/trial-001
 
 | 文档                               | 内容                            |
 | -------------------------------- | ----------------------------- |
+| [样例（avc01 完整跑通）](examples/README.md) | 真实采集/分析/pack 产物与命令说明 |
 | [操作指南](docs/guide.md)            | 采集、pack/unpack、analyze、排障、legacy |
 | [指标与看板](docs/report.md)          | 公式、validity、与 Grafana 差异      |
 | [数据格式](docs/data-format.md)      | raw 快照字段                      |

@@ -1,0 +1,15 @@
+{
+  "FormatVersion": "intel-pmt-local-bulk/v1",
+  "VerifiedAt": "2026-09-30T14:08:13.074414Z",
+  "RunId": "repo-example-20260930",
+  "Endpoint": "avc01",
+  "RequestedSamples": 5,
+  "ObservedFiles": 5,
+  "CompleteFiles": 5,
+  "InvalidFiles": 0,
+  "ManifestRecords": 5,
+  "AllObservedFilesValid": true,
+  "RequestedSampleCountReached": true,
+  "Errors": [],
+  "RunUpdatedAt": "2026-09-30T14:07:58.649413Z"
+}

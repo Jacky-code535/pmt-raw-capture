@@ -1,0 +1,277 @@
+{
+  "CollectorCPU": 2,
+  "CollectorSourceSHA256": "fda23fc78c6f7ee4e62bdcc70da3c26a12903d2a32fc8fac413ba5ab8a7ea767",
+  "CollectorSourcesSHA256": {
+    "__init__.py": "2e0ffe84a50c99bcf6e7280fcf396ec372607941f66a245f6f64cc1dcdca304b",
+    "config.py": "7bfd8a00bebee4cd7cd0c592536f029bce90cd247132eb5ac8836a12482a1e07",
+    "discover.py": "b29d40635f3e1abadb7987be0ddf56f820a60f8fec99c97e812108a563e12f77",
+    "reader.py": "91149c09318e6c6f64a20f7cc4dbf5f8745d515dea7763bd93cec0b77e79f175",
+    "sampler.py": "fda23fc78c6f7ee4e62bdcc70da3c26a12903d2a32fc8fac413ba5ab8a7ea767",
+    "writer.py": "6e9ed066caa221536dc6cdde85b09cff76531b7ec23d0e521f2a08cc17efdcd8"
+  },
+  "CompleteFiles": 5,
+  "CompletedFiles": 5,
+  "CreatedAt": "2026-09-30T14:07:50.475392Z",
+  "EffectiveCPUs": [
+    2
+  ],
+  "Endpoint": "avc01",
+  "ExpectedDurationSeconds": 10.0,
+  "ExpectedRawBytesPerSample": 190720,
+  "Experiment": "",
+  "FormatVersion": "intel-pmt-local-bulk/v1",
+  "FreeBytesAtStart": 107375947776,
+  "IncompleteFiles": 0,
+  "IntervalSeconds": 2.0,
+  "Inventory": [
+    {
+      "AccessId": "telem1",
+      "Guid": "0x22491753",
+      "Path": "/sys/class/intel_pmt/telem1/telem",
+      "Size": 6272
+    },
+    {
+      "AccessId": "telem2",
+      "Guid": "0x3d4bb40a",
+      "Path": "/sys/class/intel_pmt/telem2/telem",
+      "Size": 48
+    },
+    {
+      "AccessId": "telem3",
+      "Guid": "0x6e94ffa0",
+      "Path": "/sys/class/intel_pmt/telem3/telem",
+      "Size": 176
+    },
+    {
+      "AccessId": "telem4",
+      "Guid": "0x22491753",
+      "Path": "/sys/class/intel_pmt/telem4/telem",
+      "Size": 6272
+    },
+    {
+      "AccessId": "telem5",
+      "Guid": "0x3d4bb41a",
+      "Path": "/sys/class/intel_pmt/telem5/telem",
+      "Size": 24
+    },
+    {
+      "AccessId": "telem6",
+      "Guid": "0x6e94ffa0",
+      "Path": "/sys/class/intel_pmt/telem6/telem",
+      "Size": 176
+    },
+    {
+      "AccessId": "telem7",
+      "Guid": "0x22806802",
+      "Path": "/sys/class/intel_pmt/telem7/telem",
+      "Size": 6784
+    },
+    {
+      "AccessId": "telem8",
+      "Guid": "0x3d4bb41a",
+      "Path": "/sys/class/intel_pmt/telem8/telem",
+      "Size": 24
+    },
+    {
+      "AccessId": "telem9",
+      "Guid": "0x22473996",
+      "Path": "/sys/class/intel_pmt/telem9/telem",
+      "Size": 14496
+    },
+    {
+      "AccessId": "telem10",
+      "Guid": "0x477e9373",
+      "Path": "/sys/class/intel_pmt/telem10/telem",
+      "Size": 6160
+    },
+    {
+      "AccessId": "telem11",
+      "Guid": "0x22806802",
+      "Path": "/sys/class/intel_pmt/telem11/telem",
+      "Size": 6784
+    },
+    {
+      "AccessId": "telem12",
+      "Guid": "0x3d4bb41a",
+      "Path": "/sys/class/intel_pmt/telem12/telem",
+      "Size": 24
+    },
+    {
+      "AccessId": "telem13",
+      "Guid": "0x22473996",
+      "Path": "/sys/class/intel_pmt/telem13/telem",
+      "Size": 14496
+    },
+    {
+      "AccessId": "telem14",
+      "Guid": "0x477e9373",
+      "Path": "/sys/class/intel_pmt/telem14/telem",
+      "Size": 6160
+    },
+    {
+      "AccessId": "telem15",
+      "Guid": "0x22806802",
+      "Path": "/sys/class/intel_pmt/telem15/telem",
+      "Size": 6784
+    },
+    {
+      "AccessId": "telem16",
+      "Guid": "0x3d4bb41a",
+      "Path": "/sys/class/intel_pmt/telem16/telem",
+      "Size": 24
+    },
+    {
+      "AccessId": "telem17",
+      "Guid": "0x22473996",
+      "Path": "/sys/class/intel_pmt/telem17/telem",
+      "Size": 14496
+    },
+    {
+      "AccessId": "telem18",
+      "Guid": "0x477e9373",
+      "Path": "/sys/class/intel_pmt/telem18/telem",
+      "Size": 6160
+    },
+    {
+      "AccessId": "telem19",
+      "Guid": "0x22491753",
+      "Path": "/sys/class/intel_pmt/telem19/telem",
+      "Size": 6272
+    },
+    {
+      "AccessId": "telem20",
+      "Guid": "0x3d4bb40a",
+      "Path": "/sys/class/intel_pmt/telem20/telem",
+      "Size": 48
+    },
+    {
+      "AccessId": "telem21",
+      "Guid": "0x6e94ffa0",
+      "Path": "/sys/class/intel_pmt/telem21/telem",
+      "Size": 176
+    },
+    {
+      "AccessId": "telem22",
+      "Guid": "0x22491753",
+      "Path": "/sys/class/intel_pmt/telem22/telem",
+      "Size": 6272
+    },
+    {
+      "AccessId": "telem23",
+      "Guid": "0x3d4bb41a",
+      "Path": "/sys/class/intel_pmt/telem23/telem",
+      "Size": 24
+    },
+    {
+      "AccessId": "telem24",
+      "Guid": "0x6e94ffa0",
+      "Path": "/sys/class/intel_pmt/telem24/telem",
+      "Size": 176
+    },
+    {
+      "AccessId": "telem25",
+      "Guid": "0x22806802",
+      "Path": "/sys/class/intel_pmt/telem25/telem",
+      "Size": 6784
+    },
+    {
+      "AccessId": "telem26",
+      "Guid": "0x3d4bb41a",
+      "Path": "/sys/class/intel_pmt/telem26/telem",
+      "Size": 24
+    },
+    {
+      "AccessId": "telem27",
+      "Guid": "0x22473996",
+      "Path": "/sys/class/intel_pmt/telem27/telem",
+      "Size": 14496
+    },
+    {
+      "AccessId": "telem28",
+      "Guid": "0x477e9373",
+      "Path": "/sys/class/intel_pmt/telem28/telem",
+      "Size": 6160
+    },
+    {
+      "AccessId": "telem29",
+      "Guid": "0x22806802",
+      "Path": "/sys/class/intel_pmt/telem29/telem",
+      "Size": 6784
+    },
+    {
+      "AccessId": "telem30",
+      "Guid": "0x3d4bb41a",
+      "Path": "/sys/class/intel_pmt/telem30/telem",
+      "Size": 24
+    },
+    {
+      "AccessId": "telem31",
+      "Guid": "0x22473996",
+      "Path": "/sys/class/intel_pmt/telem31/telem",
+      "Size": 14496
+    },
+    {
+      "AccessId": "telem32",
+      "Guid": "0x477e9373",
+      "Path": "/sys/class/intel_pmt/telem32/telem",
+      "Size": 6160
+    },
+    {
+      "AccessId": "telem33",
+      "Guid": "0x22806802",
+      "Path": "/sys/class/intel_pmt/telem33/telem",
+      "Size": 6784
+    },
+    {
+      "AccessId": "telem34",
+      "Guid": "0x3d4bb41a",
+      "Path": "/sys/class/intel_pmt/telem34/telem",
+      "Size": 24
+    },
+    {
+      "AccessId": "telem35",
+      "Guid": "0x22473996",
+      "Path": "/sys/class/intel_pmt/telem35/telem",
+      "Size": 14496
+    },
+    {
+      "AccessId": "telem36",
+      "Guid": "0x477e9373",
+      "Path": "/sys/class/intel_pmt/telem36/telem",
+      "Size": 6160
+    }
+  ],
+  "Machine": {
+    "BootId": "4442d27f-f388-4e14-8d66-74fd4a363ead",
+    "DMI": {
+      "bios_date": "12/18/2025",
+      "bios_vendor": "Intel Corporation",
+      "bios_version": "BHSDCRB1.86B.3545.P22.2512182051",
+      "board_name": "AvenueCity",
+      "product_name": "AvenueCity"
+    },
+    "Hostname": "avc01",
+    "Kernel": {
+      "Machine": "x86_64",
+      "Release": "7.0.0-34-generic",
+      "Sysname": "Linux",
+      "Version": "#34-Ubuntu SMP PREEMPT_DYNAMIC Wed Sep  2 14:29:37 UTC 2026"
+    },
+    "Python": "3.14.4"
+  },
+  "Metadata": null,
+  "Note": "",
+  "Pid": 65147,
+  "PlannedSampleSpanSeconds": 8.0,
+  "PlatformLabel": "",
+  "ProcessBootId": "4442d27f-f388-4e14-8d66-74fd4a363ead",
+  "ProcessStart": "2961571",
+  "RequestedSamples": 5,
+  "RunId": "repo-example-20260930",
+  "Status": "completed",
+  "SysfsRoot": "/sys/class/intel_pmt",
+  "ToolVersion": "0.8.0",
+  "UpdatedAt": "2026-09-30T14:07:58.649413Z",
+  "Workload": "",
+  "XMLVersionLabel": ""
+}

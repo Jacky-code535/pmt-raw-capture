@@ -15,6 +15,9 @@
 !/tests/
 !/config/
 !/examples/
+!/examples/**
+*.tar.gz
+!/examples/**/*.tar.gz
 /service/configs/*
 !/service/configs/lab-host.conf.example
 /service/systemd/*
@@ -23,5 +26,4 @@
 __pycache__/
 *.py[cod]
 .pytest_cache/
-*.tar.gz
 /scripts/measure-collector-overhead.py

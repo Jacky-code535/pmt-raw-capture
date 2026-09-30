@@ -1,0 +1,39 @@
+{
+  "format": "pmt-metrics/v1",
+  "schema": {"guid": "0x22473996", "size": 14496},
+  "cores": 64,
+  "max_gap_factor": 1.5,
+  "guards": {
+    "heartbeat": "LAST_UPDATE_TIMESTAMP.LAST_UPDATE_TIMESTAMP",
+    "loss": "AGG_DATA_LOSS_COUNT.AGG_DATA_LOSS_COUNT"
+  },
+  "metrics": [
+    {"id": "temperature_c", "title": "Core temperature", "unit": "C", "operation": "gauge", "spatial": "max", "source": "C{quad0}_C{quad1}_C{quad2}_C{quad3}_TEMP.C{core}_TEMP", "minimum": -50, "maximum": 150, "formula": "current decoded temperature; spatial max; temporal sample mean"},
+    {"id": "core_usage_lifetime", "title": "Core usage lifetime counter (experimental)", "unit": "core_usage", "operation": "gauge", "spatial": "sum", "source": "C{core}_USAGE_METER.C{core}_USAGE_METER", "invalid_values": [3735928559, 16045690984833335023], "formula": "current XML U64.38.26 core_usage; relative cumulative counter, not CPU utilization percent"},
+    {"id": "core_usage_delta", "title": "Core usage interval increase (experimental)", "unit": "core_usage", "operation": "delta", "spatial": "sum", "source": "C{core}_USAGE_METER.C{core}_USAGE_METER", "invalid_values": [3735928559, 16045690984833335023], "formula": "current - previous over actual adjacent capture interval, not dashboard rolling 5-minute increase or utilization percent"},
+    {"id": "pvp64_delta", "title": "PVP 64-cycle count increase", "unit": "count", "operation": "delta", "spatial": "sum", "source": "C{core}_PVP_THROTTLE_64.C{core}_PVP_THROTTLE_64", "invalid_values": [3735928559, 16045690984833335023], "formula": "current - previous; no reset/wrap inference"},
+    {"id": "pvp64_rate", "title": "PVP 64-cycle rate", "unit": "count/s", "operation": "rate", "spatial": "sum", "source": "C{core}_PVP_THROTTLE_64.C{core}_PVP_THROTTLE_64", "invalid_values": [3735928559, 16045690984833335023], "formula": "(current - previous) / actual elapsed seconds"},
+    {"id": "pvp1024_delta", "title": "PVP 1024-cycle count increase", "unit": "count", "operation": "delta", "spatial": "sum", "source": "C{core}_PVP_THROTTLE_1024.C{core}_PVP_THROTTLE_1024", "invalid_values": [3735928559, 16045690984833335023], "formula": "current - previous; independent from the 64-cycle counter"},
+    {"id": "pvp1024_rate", "title": "PVP 1024-cycle rate", "unit": "count/s", "operation": "rate", "spatial": "sum", "source": "C{core}_PVP_THROTTLE_1024.C{core}_PVP_THROTTLE_1024", "invalid_values": [3735928559, 16045690984833335023], "formula": "(current - previous) / actual elapsed seconds"},
+    {"id": "frequency_non_c6_mhz", "title": "Frequency outside C6 (estimate)", "unit": "MHz", "operation": "histogram_mean", "spatial": "ratio", "source": "C{core}_FREQ_HIST_R{pair}_R{pair_next}.C{core}_FREQ_HIST_R{bucket}", "buckets": 12, "selected": [1,2,3,4,5,6,7,8,9,10,11], "weights": [0,400,1050,1450,1850,2250,2650,3050,3450,3850,4250,4600], "invalid_values": [14943714.236], "provisional": "histogram_scale_unverified;midpoint_estimate_open_bins_approximate", "formula": "sum(delta[b] * midpoint[b], b=1..11) / sum(delta[b], b=1..11)"},
+    {"id": "frequency_all_mhz", "title": "Mean frequency including C6 (dashboard-style estimate)", "unit": "MHz", "operation": "histogram_mean", "spatial": "ratio", "source": "C{core}_FREQ_HIST_R{pair}_R{pair_next}.C{core}_FREQ_HIST_R{bucket}", "buckets": 12, "selected": [0,1,2,3,4,5,6,7,8,9,10,11], "weights": [0,400,1050,1450,1850,2250,2650,3050,3450,3850,4250,4600], "invalid_values": [14943714.236], "provisional": "histogram_scale_unverified;midpoint_estimate;adjacent_interval_not_dashboard_rolling_5m", "formula": "sum(delta[b] * midpoint[b], b=0..11) / sum(delta[b], b=0..11); C6 r0 midpoint is 0 MHz"},
+    {"id": "voltage_all_mv", "title": "Mean voltage (dashboard-style estimate)", "unit": "mV", "operation": "histogram_mean", "spatial": "ratio", "source": "C{core}_VOLT_HIST_R{pair}_R{pair_next}.C{core}_VOLT_HIST_R{bucket}", "buckets": 12, "selected": [0,1,2,3,4,5,6,7,8,9,10,11], "weights": [300,630,685,740,795,850,905,960,1015,1070,1125,1200], "invalid_values": [14943714.236], "provisional": "histogram_scale_unverified;midpoint_estimate;adjacent_interval_not_dashboard_rolling_5m", "formula": "sum(delta[b] * midpoint_mv[b], b=0..11) / sum(delta[b], b=0..11); r0 means below 602 mV, not C6"},
+    {"id": "c6_histogram_pct", "title": "C6 histogram share (provisional)", "unit": "%", "operation": "histogram_share", "spatial": "ratio", "source": "C{core}_FREQ_HIST_R{pair}_R{pair_next}.C{core}_FREQ_HIST_R{bucket}", "buckets": 12, "selected": [0], "invalid_values": [14943714.236], "provisional": "histogram_scale_unverified;not_calibrated_wall_time_utilization", "formula": "100 * delta[0] / sum(delta[0..11])"},
+    {"id": "frequency_distribution", "title": "Frequency histogram share", "unit": "%", "operation": "histogram_distribution", "spatial": "ratio", "source": "C{core}_FREQ_HIST_R{pair}_R{pair_next}.C{core}_FREQ_HIST_R{bucket}", "buckets": 12, "labels": ["C6", "<=800 MHz", "900-1200 MHz", "1300-1600 MHz", "1700-2000 MHz", "2100-2400 MHz", "2500-2800 MHz", "2900-3200 MHz", "3300-3600 MHz", "3700-4000 MHz", "4100-4400 MHz", ">=4500 MHz"], "invalid_values": [14943714.236], "provisional": "histogram_scale_unverified", "formula": "100 * delta[b] / sum(delta[0..11]); one column per bucket"},
+    {"id": "voltage_distribution", "title": "Voltage histogram share", "unit": "%", "operation": "histogram_distribution", "spatial": "ratio", "source": "C{core}_VOLT_HIST_R{pair}_R{pair_next}.C{core}_VOLT_HIST_R{bucket}", "buckets": 12, "labels": ["<602 mV", "602.5-657 mV", "657.5-712 mV", "712.5-767 mV", "767.5-822 mV", "822.5-877 mV", "877.5-932 mV", "932.5-987 mV", "987.5-1042 mV", "1042.5-1097 mV", "1097.5-1152 mV", ">1152 mV"], "invalid_values": [14943714.236], "provisional": "histogram_scale_unverified;voltage_r0_is_not_C6", "formula": "100 * delta[b] / sum(delta[0..11]); voltage distribution, not active-state voltage"},
+    {"id": "temperature_distribution", "title": "Temperature histogram share", "unit": "%", "operation": "histogram_distribution", "spatial": "ratio", "source": "C{core}_TEMP_HIST_R{pair}_R{pair_next}.C{core}_TEMP_HIST_R{bucket}", "buckets": 12, "labels": ["<20 C", "20.5-27.5 C", "28-35 C", "35.5-42.5 C", "43-50 C", "50.5-57.5 C", "58-65 C", "65.5-72.5 C", "73-80 C", "80.5-87.5 C", "88-95 C", ">95 C"], "invalid_values": [14943714.236], "provisional": "histogram_scale_unverified", "formula": "100 * delta[b] / sum(delta[0..11]); one column per temperature bucket"}
+  ],
+  "charts": [
+    {"metric": "temperature_c", "title": "Temperature", "unit": "C", "type": "line"},
+    {"metric": "core_usage_delta", "title": "Core usage interval increase | experimental", "unit": "core_usage", "type": "line"},
+    {"metric": "frequency_all_mhz", "title": "Mean frequency including C6 | provisional", "unit": "MHz", "type": "line"},
+    {"metric": "voltage_all_mv", "title": "Mean voltage | provisional", "unit": "mV", "type": "line"},
+    {"metric": "frequency_non_c6_mhz", "title": "Non-C6 frequency estimate | provisional", "unit": "MHz", "type": "line"},
+    {"metric": "c6_histogram_pct", "title": "C6 histogram share | provisional", "unit": "%", "type": "line"},
+    {"metric": "pvp64_rate", "title": "PVP 64-cycle count rate", "unit": "count/s", "type": "line"},
+    {"metric": "pvp1024_rate", "title": "PVP 1024-cycle count rate", "unit": "count/s", "type": "line"},
+    {"metric": "frequency_distribution", "title": "Frequency histogram distribution | provisional", "unit": "%", "type": "stacked_column"},
+    {"metric": "voltage_distribution", "title": "Voltage histogram distribution | provisional", "unit": "%", "type": "stacked_column"},
+    {"metric": "temperature_distribution", "title": "Temperature histogram distribution | provisional", "unit": "%", "type": "stacked_column"}
+  ]
+}

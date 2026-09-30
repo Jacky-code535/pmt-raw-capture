@@ -1,0 +1,4 @@
+Run: repo-example-20260930
+Collection: COMPLETE
+Snapshots: 5/5
+This result describes collection, not hardware health.

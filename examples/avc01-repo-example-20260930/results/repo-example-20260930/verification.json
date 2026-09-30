@@ -1,0 +1,15 @@
+{
+  "AllObservedFilesValid": true,
+  "CompleteFiles": 5,
+  "Endpoint": "avc01",
+  "Errors": [],
+  "FormatVersion": "intel-pmt-local-bulk/v1",
+  "InvalidFiles": 0,
+  "ManifestRecords": 5,
+  "ObservedFiles": 5,
+  "RequestedSampleCountReached": true,
+  "RequestedSamples": 5,
+  "RunId": "repo-example-20260930",
+  "RunUpdatedAt": "2026-09-30T14:07:58.649413Z",
+  "VerifiedAt": "2026-09-30T14:08:13.074414Z"
+}

@@ -1,0 +1,22 @@
+{
+  "format": "pmt-long-metrics/v1",
+  "rows": 90240,
+  "input_hashes": {
+    "decoded.csv": "be931b80f9b8ae180403cc011bdb84c30d27232aca92f82e8a0c7d0546deee87",
+    "analysis.json": "e5bd39468abe916ee14cc0b10328783ab2868da980df5ed8953e7e1b8c2356a1",
+    "run.json": "152203d825a1c7bff4fe70cbd24e1d92ff8b15695d230a1876a476e0cb63b959",
+    "metrics-gnr.json": "7b6f82e06211a0c2bdc49bd5d4ffa877eb84faeb1bead3d664fcb69e646867a4"
+  },
+  "outputs": {
+    "metrics.csv": "a63980c388c8ca1e18de92a6e8a5f4f31c972c35cf45e9086bb7963fbb97c876",
+    "dashboard.html": "3c55c7b7a1dbee3aaec001512d6421db364a93e1398f62e0e795c0eeb39027d4"
+  },
+  "coverage": {
+    "schema": {
+      "guid": "0x22473996",
+      "size": 14496
+    },
+    "metrics_per_core": 47
+  },
+  "window": "adjacent captured samples; not Prometheus rolling extrapolation"
+}
