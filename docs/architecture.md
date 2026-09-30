@@ -1,8 +1,8 @@
 # Architecture
 
-The command pipeline is capture -> pack -> unpack -> validate-platform -> analyze -> compare.
-Analysis can also read an existing run directly. `archive` produces per-sample binary
-payloads and a replayable copy of the original capture format.
+The default pipeline is start -> analyze: raw -> decoded.csv -> metrics.csv -> dashboard.html.
+Verification and exact XML validation are internal steps. Pack/unpack are optional
+transport helpers; archive, compare and extended analysis remain compatibility paths.
 
 | Package | Responsibility |
 | --- | --- |
@@ -11,6 +11,9 @@ payloads and a replayable copy of the original capture format.
 | `pmt.process` | explicit counter reconstruction, finite-value statistics, SQLite staging, event alignment |
 | `pmt.export` | CSV writers, endpoint/topology mapping, validated archive extraction |
 | `pmt.pipeline` | immutable input handling, XML freezing, output staging and provenance |
+| `pmt.metrics` | streaming long-form metric export using explicit GNR definitions |
+| `pmt.report` | shared metric evaluation; legacy rollups and Excel implementation |
+| `pmt.core_view` | CSV-only standalone HTML with inline JavaScript/SVG |
 | `pmt.cli` | commands and collector lifecycle |
 
 The root executable works from a checkout or an extracted package. Top-level legacy
@@ -24,8 +27,8 @@ XML provisioning and does not fetch schema updates while running.
 - Select schemas by exact GUID and byte size, never by a platform label alone.
 - Do not infer physical cores from endpoint or aggregator identifiers.
 - Do not silently turn counters into rates without an explicit policy.
-- Keep original observations separate from validity-filtered series and summaries.
-- Report per-series expected, observed, valid, invalid and missing counts without inferring hardware health.
+- Keep complete XML observations separate from derived metrics, both in long form.
+- Retain interval validity without inferring hardware health; do not generate extra summary CSVs by default.
 - Publish analysis only after all snapshots succeed; failed staging directories are removed.
 - Record input hashes, frozen XML, source hashes and the available platform Git revision.
 

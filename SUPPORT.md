@@ -3,7 +3,7 @@
 ## 支持范围
 
 当前正式验证范围为 [GNR 兼容性矩阵](docs/compatibility.md) 中列出的精确
-`GUID + Size` 组合。发布包中包含更多 XML 不代表对应平台已经通过验证。
+`GUID + Size` 组合。发布包仅包含这七组 schema；外部 XML 不自动获得支持状态。
 遇到未知组合时请保留 `inventory` 输出。
 
 ## 提交问题前

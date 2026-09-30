@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.8.0 (2026-09-30)
+
+- Make default analyze produce only decoded.csv, long-form metrics.csv and dashboard.html, plus provenance.
+- Reuse explicit adjacent-interval Core formulas; remove default multi-level views, event/statistical CSVs and Excel dependencies.
+- Add duration-seconds sampling plans and CSV-only view regeneration; retain old analysis through --legacy-analysis.
+- Bundle only seven qualified GNR schemas from the unchanged platform-data revision.
+- Use actual timestamps on charts and break lines across omitted invalid intervals; retain all metric observations in CSV.
+
 ## 0.7.0 (2026-09-30)
 
 - Add optional `analyze --report` and `report` commands for JSON-defined Core metrics, quality CSV, Excel workbook and selectable offline Core trends.

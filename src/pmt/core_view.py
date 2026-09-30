@@ -6,9 +6,95 @@ import csv
 import json
 from collections import defaultdict
 from pathlib import Path
+import math
 
 KEY_METRICS = ("temperature_c", "core_usage_delta", "pvp64_rate", "pvp1024_rate",
                "frequency_all_mhz", "voltage_all_mv", "c6_histogram_pct")
+
+
+def build_metrics_data(path):
+    definitions, units, sequences = {}, {}, set()
+    required = {"timestamp", "endpoint", "aggregator", "core", "sequence", "metric",
+                "value", "unit", "title", "measure", "validity", "numerator", "denominator"}
+    with path.open(newline="", encoding="utf-8-sig") as source:
+        reader = csv.DictReader(source)
+        if not required.issubset(reader.fieldnames or []):
+            raise ValueError("metrics CSV is missing required columns")
+        for row in reader:
+            metric = row["metric"].partition(".")[2]
+            if not metric:
+                raise ValueError("metrics must include the Core prefix")
+            if row["metric"].partition(".")[0] != "C" + row["core"]:
+                raise ValueError("metric prefix differs from Core identity")
+            if metric in units and units[metric] != row["unit"]:
+                raise ValueError("inconsistent metric unit")
+            definitions[metric], units[metric] = row["title"], row["unit"]
+            sequences.add(int(row["sequence"]))
+    chosen = [metric for metric in KEY_METRICS if metric in definitions]
+    if not chosen:
+        chosen = list(definitions)[:7]
+    if not chosen or not sequences:
+        raise ValueError("no metrics to display")
+    ordered = sorted(sequences)
+    stride = max(1, (len(ordered) + 599) // 600)
+    selected = set(ordered[::stride]) | {ordered[-1]}
+    frames, totals, gaps, locations = defaultdict(dict), {}, set(), {}
+    last_sequence = 0
+    with path.open(newline="", encoding="utf-8-sig") as source:
+        for row in csv.DictReader(source):
+            metric = row["metric"].partition(".")[2]
+            if metric not in chosen:
+                continue
+            sequence = int(row["sequence"])
+            if sequence < last_sequence:
+                raise ValueError("metrics CSV must be ordered by sequence")
+            last_sequence = sequence
+            scope = row["endpoint"] + "/" + row["aggregator"] + "/C" + row["core"]
+            locations[scope] = {name: row.get(name, "") for name in ("physical_core", "socket", "die")}
+            key = (scope, metric)
+            value = float(row["value"]) if row["value"] else None
+            if value is not None and not math.isfinite(value):
+                raise ValueError("non-finite metrics value")
+            total = totals.setdefault(key, [0.0, 0.0])
+            if value is None:
+                gaps.add(key)
+            else:
+                operation = row["measure"]
+                if operation.startswith("histogram") or operation == "rate":
+                    numerator, denominator = float(row["numerator"]), float(row["denominator"])
+                elif operation == "delta":
+                    numerator, denominator = value, 0
+                else:
+                    numerator, denominator = value, 1
+                total[0] += numerator
+                total[1] += denominator
+            if sequence not in selected:
+                continue
+            frame = frames[scope].setdefault(sequence, {"end": row["timestamp"], "metrics": {}})
+            if frame["end"] != row["timestamp"] or metric in frame["metrics"]:
+                raise ValueError("inconsistent or duplicated metrics row")
+            frame["metrics"][metric] = [value, row["validity"], key in gaps]
+            gaps.discard(key)
+    result = {}
+    for scope, samples in frames.items():
+        if any(set(frame["metrics"]) != set(chosen) for frame in samples.values()):
+            raise ValueError("incomplete metrics for " + scope)
+        aggregate = {}
+        for metric in chosen:
+            numerator, denominator = totals.get((scope, metric), (0, 0))
+            aggregate[metric] = numerator / denominator if denominator else None
+        result[scope] = {"samples": [[sequence, frame["end"], frame["metrics"]]
+                        for sequence, frame in sorted(samples.items())], "aggregate": aggregate,
+                 "location": locations[scope]}
+    return {"scopes": result, "definitions": {metric: definitions[metric] for metric in chosen},
+            "units": units, "histograms": {}, "total_samples": len(sequences)}
+
+
+def generate_from_csv(source, output):
+    data = build_metrics_data(Path(source))
+    serialized = json.dumps(data, ensure_ascii=True, separators=(",", ":"))
+    Path(output).write_text(PAGE.replace("__DATA__", serialized.replace("<", "\\u003c")), encoding="utf-8")
+    return output
 
 
 def build_data(root):
@@ -73,13 +159,13 @@ label{display:grid;gap:4px;font-size:13px;font-weight:700;min-width:130px}select
 .notice{background:#fff;border-left:3px solid #bd833d;padding:12px;font-size:13px;margin:10px 0 18px}.stats{display:flex;gap:24px;flex-wrap:wrap}.stat{min-width:160px}.stat strong{display:block;font-size:23px;color:var(--green)}.stat span{font-size:12px;color:var(--muted)}
 @media(max-width:740px){h1{font-size:24px}.grid{grid-template-columns:1fr}.controls label{flex:1 1 135px}main{padding:14px 15px 55px}}
 </style></head><body>
-<header><a href="pmt-report.xlsx">下载 Excel 汇总</a><h1>逐 Core 指标看板</h1><p class="subtitle">本地离线 CSV → JSON 派生指标 → 可选择 aggregator 和 XML 本地 Core 的图表</p></header>
+<header><h1>PMT 逐 Core 指标看板</h1></header>
 <main><div class="controls"><label>Aggregator<select id="aggregator"></select></label><label>XML 本地 Core<select id="core"></select></label></div>
 <p id="identity" class="context"></p><div class="notice">这里选的是 PMT XML 本地槽位，不是 Linux CPU 编号或已确认的物理 Core。百分比分布及加权频率/电压为探索性结果；此离线视图逐相邻样本计算，与在线 dashboard 的滚动 5 分钟 Prometheus 查询不能直接逐点对比。</div>
 <section><h2>选定 Core 的概况</h2><div class="stats" id="stats"></div></section>
 <section><h2>温度与活动</h2><div class="grid" id="activity"></div></section>
 <section><h2>频率与电压估计</h2><div class="grid" id="operating"></div></section>
-<section><h2>指标口径</h2><p>core_usage 是 XML 定义的实验性累计量，增量不是 CPU 利用率；PVP 64/1024-cycle 是两种独立检测窗口的累计 counter；频率 r0 是 C6，电压 r0 是 &lt;602 mV。首个 counter 样本只有基线。图表最多显示约 600 个实际采样点，不插值；全部指标、直方图和质量原因见 <a href="core-metrics.csv">Core 指标 CSV</a>，统计见 <a href="metric-summary.csv">指标摘要</a>，计算定义见 <a href="metrics.json">JSON</a>。</p></section>
+<section><h2>指标口径</h2><p>core_usage 是实验性累计量，增量不是 CPU 利用率。PVP 64/1024-cycle 是两种独立检测窗口的累计计数。频率 r0 是 C6，电压 r0 是 &lt;602 mV；频率和电压为区间桶加权估计。</p></section>
 </main><script id="report-data" type="application/json">__DATA__</script><script>
 "use strict";
 const data=JSON.parse(document.getElementById('report-data').textContent), allScopes=Object.keys(data.scopes).sort((a,b)=>a.localeCompare(b,undefined,{numeric:true}));
@@ -88,6 +174,7 @@ const metricNames={temperature_c:'温度',core_usage_lifetime:'Core usage 累计
 const descriptions={core_usage_lifetime:'实验性累计量，不是 CPU 使用率',core_usage_delta:'相邻快照增量，不是在线 5 分钟增加量',frequency_all_mhz:'C6(r0)按 0 MHz 纳入；非瞬时频率',frequency_non_c6_mhz:'仅非 C6 桶，非瞬时频率',voltage_all_mv:'包含低于 602 mV 的 r0；非瞬时电压',c6_histogram_pct:'直方图占比，非校准后的 CPU 利用率'};
 const groupNames={frequency_distribution:'频率桶分布',voltage_distribution:'电压桶分布',temperature_distribution:'温度桶分布'};
 const units={temperature_c:'°C',core_usage_lifetime:'core_usage',core_usage_delta:'core_usage',pvp64_delta:'次',pvp64_rate:'次/秒',pvp1024_delta:'次',pvp1024_rate:'次/秒',frequency_all_mhz:'MHz',frequency_non_c6_mhz:'MHz',voltage_all_mv:'mV',c6_histogram_pct:'%'};
+for(const [id,unit] of Object.entries(data.units||{}))if(!units[id])units[id]=unit;
 const $=id=>document.getElementById(id), scopesFor=aggregator=>allScopes.filter(scope=>scope.split('/')[1]===aggregator);
 function option(select,value,text){const element=document.createElement('option');element.value=value;element.textContent=text;select.append(element)}
 function metric(sample,id){return sample[2][id]||[null,'missing_input']}
@@ -96,14 +183,15 @@ function syncCores(){const current=core.value;core.replaceChildren();for(const s
 function textNumber(value,digits=2){if(value===null||value===undefined)return '无有效值';const number=Number(value);return number!==0&&Math.abs(number)<.5*10**-digits?number.toExponential(2):number.toFixed(digits)}
 function chart(samples,id,color){const values=samples.map(sample=>metric(sample,id)[0]),valid=values.filter(value=>value!==null && Number.isFinite(value));
  if(!valid.length){const empty=document.createElement('div');empty.className='empty';empty.textContent='没有有效观测；该槽位可能未启用或这一指标没有增长。';return empty}
- let low=Math.min(...valid),high=Math.max(...valid),padding=(high-low)*.12||Math.max(Math.abs(high)*.05,1);low-=padding;high+=padding;
+ let low=Math.min(...valid),high=Math.max(...valid),padding=(high-low)*.12||Math.abs(high)*.05||1;low-=padding;high+=padding;
  const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');svg.setAttribute('viewBox','0 0 720 238');svg.classList.add('chart');svg.setAttribute('role','img');svg.setAttribute('aria-label',metricNames[id]+' 时间趋势');
  const el=(tag,attrs,parent=svg)=>{const node=document.createElementNS(svg.namespaceURI,tag);for(const [key,value] of Object.entries(attrs))node.setAttribute(key,String(value));parent.append(node);return node};
- const x=index=>55+645*index/Math.max(1,values.length-1),y=value=>24+166*(high-value)/(high-low);
- for(let tick=0;tick<=2;tick++){const val=low+(high-low)*tick;el('line',{x1:55,y1:y(val),x2:700,y2:y(val),stroke:'#dce4dd'});el('text',{x:46,y:y(val)+4,'text-anchor':'end',class:'axis'}).textContent=Math.abs(val)<.01&&val!==0?val.toExponential(1):Math.abs(val)<1?val.toFixed(3):val.toFixed(1)}
- for(const index of [0,Math.floor((values.length-1)/2),values.length-1])el('text',{x:x(index),y:223,'text-anchor':'middle',class:'axis'}).textContent=String(samples[index][0]);
+ const times=samples.map(sample=>Date.parse(sample[1])),first=times[0],span=Math.max(1,times[times.length-1]-first);
+ const x=index=>55+645*(times[index]-first)/span,y=value=>24+166*(high-value)/(high-low);
+ for(let tick=0;tick<=2;tick++){const val=low+(high-low)*tick/2;el('line',{x1:55,y1:y(val),x2:700,y2:y(val),stroke:'#dce4dd'});el('text',{x:46,y:y(val)+4,'text-anchor':'end',class:'axis'}).textContent=Math.abs(val)<.01&&val!==0?val.toExponential(1):Math.abs(val)<1?val.toFixed(3):val.toFixed(1)}
+ for(const ratio of [0,.5,1])el('text',{x:55+645*ratio,y:223,'text-anchor':ratio===0?'start':ratio===1?'end':'middle',class:'axis'}).textContent=new Date(first+(times[times.length-1]-first)*ratio).toISOString().slice(11,23);
  let path=[];function flush(){if(path.length>1)el('polyline',{points:path.join(' '),fill:'none',stroke:color,'stroke-width':2.3});path=[]}
- values.forEach((value,index)=>{if(value===null){flush();return}path.push(x(index)+','+y(value));const dot=el('circle',{cx:x(index),cy:y(value),r:3,fill:color});el('title',{},dot).textContent='序号 '+samples[index][0]+'：'+textNumber(value,4)+' '+units[id]+'（'+metric(samples[index],id)[1]+'）'});flush();return svg}
+ values.forEach((value,index)=>{if(metric(samples[index],id)[2])flush();if(value===null){flush();return}path.push(x(index)+','+y(value));const dot=el('circle',{cx:x(index),cy:y(value),r:3,fill:color});el('title',{},dot).textContent=samples[index][1]+' · 序号 '+samples[index][0]+'：'+textNumber(value,4)+' '+units[id]+'（'+metric(samples[index],id)[1]+'）'});flush();return svg}
 function figure(container,samples,id,color){const figure=document.createElement('figure'),caption=document.createElement('figcaption'),detail=document.createElement('div');caption.textContent=(metricNames[id]||data.definitions[id])+'（'+(units[id]||'原始单位')+'）';detail.className='detail';const valid=samples.filter(sample=>metric(sample,id)[0]!==null).length;detail.textContent=(descriptions[id]||'相邻样本口径')+' · 有效 '+valid+'/'+samples.length+'，空值不补零';figure.append(caption,detail,chart(samples,id,color));container.append(figure)}
 function bins(container,samples,aggregate,id){const figure=document.createElement('figure'),caption=document.createElement('figcaption'),detail=document.createElement('div');caption.textContent=groupNames[id]+'（%）';detail.className='detail';const labels=data.histograms[id],sequence=windowSelect.value;
  let values=labels.map((_,index)=>sequence==='all'?aggregate[id+'.r'+index]:metric(samples.find(sample=>String(sample[0])===sequence),id+'.r'+index)[0]);
@@ -112,7 +200,8 @@ function bins(container,samples,aggregate,id){const figure=document.createElemen
  labels.forEach((label,index)=>{const column=document.createElement('div'),space=document.createElement('div'),bar=document.createElement('span'),name=document.createElement('span');column.className='bin';space.className='bin-space';bar.className='bar';bar.style.height=(values[index]/high*100)+'%';bar.title=label+'：'+textNumber(values[index])+'%';name.className='bin-label';name.textContent=label;space.append(bar);column.append(space,name);plot.append(column)});figure.append(plot);
  const details=document.createElement('details'),summary=document.createElement('summary'),table=document.createElement('table');summary.textContent='查看各桶数值（四位小数/科学计数）';table.className='bucket-table';labels.forEach((label,index)=>{const row=table.insertRow(),bucket=row.insertCell(),percentage=row.insertCell();bucket.textContent=label;percentage.textContent=textNumber(values[index],4)+' %'});details.append(summary,table);figure.append(details)}container.append(figure)}
 function render(){const scope=selectedScope();if(!scope)return;const selected=data.scopes[scope],samples=selected.samples,aggregate=selected.aggregate;
- $('identity').textContent=scope+' · '+samples.length+' 个采样点 · '+samples[0][1]+' 至 '+samples[samples.length-1][1]+' · 物理 Core/Socket 映射未确认';
+ const location=selected.location||{},physical=location.physical_core?'Socket '+location.socket+' / Die '+location.die+' / Core '+location.physical_core:'物理 Core/Socket 映射未确认';
+ $('identity').textContent=scope+' · '+samples.length+' 个显示点'+(data.total_samples?' / '+data.total_samples+' 个采样':'')+' · '+samples[0][1]+' 至 '+samples[samples.length-1][1]+' · '+physical;
  $('stats').replaceChildren();for(const [label,id,suffix] of [['平均温度','temperature_c','°C'],['PVP64 总增量','pvp64_delta',' 次'],['含 C6 平均频率','frequency_all_mhz',' MHz'],['平均电压','voltage_all_mv',' mV']]){if(!data.definitions[id])continue;const stat=document.createElement('div'),value=document.createElement('strong'),name=document.createElement('span');stat.className='stat';value.textContent=textNumber(aggregate[id])+(aggregate[id]===null?'':suffix);name.textContent=label;stat.append(value,name);$('stats').append(stat)}
  $('activity').replaceChildren();for(const [id,color] of [['temperature_c','#b4573e'],['core_usage_delta','#147c68'],['pvp64_rate','#397a74'],['pvp1024_rate','#937448']])if(data.definitions[id])figure($('activity'),samples,id,color);
  if(!$('activity').children.length)for(const id of Object.keys(data.definitions))figure($('activity'),samples,id,'#147c68');

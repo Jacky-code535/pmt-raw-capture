@@ -176,6 +176,9 @@ def freeze_xml(metadata, inventory, target):
 
 def analyze_run(args):
     run_dir = args.run_dir.resolve()
+    extended = getattr(args, "legacy_analysis", False)
+    if not extended and (args.policies or args.events):
+        raise ValueError("policies and events require --legacy-analysis")
     if any(not math.isfinite(value) or value < 0 for value in (args.failure_before, args.failure_after)):
         raise ValueError("failure window durations must be finite and nonnegative")
     with capture.run_lock(run_dir), destination(args.output, run_dir) as target:
@@ -216,16 +219,17 @@ def analyze_run(args):
                 pass
         raw_hashes = {}
         count = 0
-        summary = SummaryStore(target / ".summary.sqlite")
-        phases = SummaryStore(target / ".phases.sqlite")
+        summary = SummaryStore(target / ".summary.sqlite") if extended else None
+        phases = SummaryStore(target / ".phases.sqlite") if extended else None
         try:
             with contextlib.ExitStack() as stack:
                 decoded = writer(stack, target / "decoded.csv", FIELDS)
-                series = writer(stack, target / "series.csv", FIELDS)
-                aligned = writer(stack, target / "aligned.csv", FIELDS + ("phase", "test_item", "status"))
-                failures = writer(stack, target / "failure-windows.csv", FIELDS + ("phase", "test_item", "failure_time", "relative_seconds"))
-                views = {level: writer(stack, target / ("view-" + level + ".csv"), ("scope",) + FIELDS)
-                         for level in analysis.TOPOLOGY + ("endpoint", "aggregator")}
+                if extended:
+                    series = writer(stack, target / "series.csv", FIELDS)
+                    aligned = writer(stack, target / "aligned.csv", FIELDS + ("phase", "test_item", "status"))
+                    failures = writer(stack, target / "failure-windows.csv", FIELDS + ("phase", "test_item", "failure_time", "relative_seconds"))
+                    views = {level: writer(stack, target / ("view-" + level + ".csv"), ("scope",) + FIELDS)
+                             for level in analysis.TOPOLOGY + ("endpoint", "aggregator")}
                 for path in sorted((run_dir / "snapshots").glob("bulk-*.json.gz")):
                     before = digest(path)
                     document = capture.read_bundle(path)
@@ -244,6 +248,8 @@ def analyze_run(args):
                     for row in decoded_rows(document, results, topology):
                         decoded.writerow(dict(row, measure="value", validity="invalid_marker" if row["known_invalid"] else "decoded_unfiltered"))
                         count += 1
+                        if not extended:
+                            continue
                         for sample in processor.add(row):
                             series.writerow(sample)
                             summary.add(sample)
@@ -259,11 +265,12 @@ def analyze_run(args):
                                 aligned.writerow(match)
                                 phases.add(match, GROUP + ("phase", "test_item", "status"))
                             failures.writerows(analysis.failure_windows(sample, events, args.failure_before, args.failure_after))
-                writer(stack, target / "summary.csv", GROUP + STATS).writerows(summary.rows())
-                writer(stack, target / "data-quality.csv", GROUP + QUALITY).writerows(
-                    summary.quality_rows(int(state["RequestedSamples"])))
-                writer(stack, target / "phase-summary.csv", GROUP + ("phase", "test_item", "status") + STATS).writerows(
-                    phases.rows(GROUP + ("phase", "test_item", "status")))
+                if extended:
+                    writer(stack, target / "summary.csv", GROUP + STATS).writerows(summary.rows())
+                    writer(stack, target / "data-quality.csv", GROUP + QUALITY).writerows(
+                        summary.quality_rows(int(state["RequestedSamples"])))
+                    writer(stack, target / "phase-summary.csv", GROUP + ("phase", "test_item", "status") + STATS).writerows(
+                        phases.rows(GROUP + ("phase", "test_item", "status")))
             if args.decoder and digest(args.decoder) != decoder_hash:
                 raise ValueError("decoder changed during analysis")
             capture.atomic_write_json(target / "analysis.json", {
@@ -283,11 +290,20 @@ def analyze_run(args):
                 "validity": "XML-decoded numeric values are not hardware-health qualification; invalid markers require policy",
             })
         finally:
-            summary.close()
-            phases.close()
-        (target / ".summary.sqlite").unlink()
-        (target / ".phases.sqlite").unlink()
-    return {"output": str(args.output), "decoded_rows": count}
+            if extended:
+                summary.close()
+                phases.close()
+        if extended:
+            (target / ".summary.sqlite").unlink()
+            (target / ".phases.sqlite").unlink()
+        result = {"output": str(args.output), "decoded_rows": count}
+        if getattr(args, "report", False) and not args.report_output:
+            from pmt.metrics import write_metrics
+            metric_count = write_metrics(target, target, args.report_metrics, args.report_topology)
+            result["report"] = {"metric_rows": metric_count,
+                                "metrics": str(args.output / "metrics.csv"),
+                                "core_view": str(args.output / "dashboard.html")}
+    return result
 
 
 def compare_runs(args):

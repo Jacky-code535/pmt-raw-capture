@@ -11,7 +11,7 @@ def arguments(path):
     strings = {"endpoint", "run_id", "experiment", "workload", "note", "platform", "xml_version"}
     paths = {"sysfs_root", "output_root", "metadata"}
     integers = {"samples", "expected_aggregators", "cpu"}
-    numbers = {"interval_seconds"}
+    numbers = {"interval_seconds", "duration_seconds"}
     flags = {"background", "align_minute"}
     result = []
     for name, value in settings.items():

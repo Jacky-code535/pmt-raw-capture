@@ -97,7 +97,7 @@ class PostprocessTest(unittest.TestCase):
         output = self.root / "analysis-output"
         command = ["analyze", "--run-dir", str(run_dir), "--metadata", str(registry),
                    "--decoder", sys.executable, "--output", str(output),
-                   "--events", str(events), "--policies", str(policies)]
+                   "--events", str(events), "--policies", str(policies), "--legacy-analysis"]
         with mock.patch.object(postprocess.subprocess, "run", side_effect=decode), contextlib.redirect_stdout(io.StringIO()):
             self.assertEqual(cli.main(command), 0)
         with (output / "summary.csv").open() as source:

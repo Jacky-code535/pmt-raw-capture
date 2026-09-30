@@ -1,8 +1,8 @@
 # GNR 兼容性
 
-## 0.7.0 支持声明
+## 0.8.0 支持声明
 
-0.7.0 的 collector 可发现 Linux Intel PMT sysfs 暴露的区域，但“可发现”不等于“已验证解码”。正式资格范围是 GNR 参考主机上观察并通过真实采集、精确 XML 匹配和内置解码的以下七组 schema。
+collector 可发现 Linux Intel PMT sysfs 暴露的区域，但“可发现”不等于“已验证解码”。包内仅包含 GNR 参考主机上观察并通过既有真实采集、精确 XML 匹配和内置解码的以下七组 schema。0.8.0 不扩展硬件资格范围。
 
 平台数据版本：`df82b1741dec619300707881114f6b17b5204f60`
 
@@ -42,7 +42,7 @@ sudo ./pmt-capture inventory
 ## 当前边界
 
 - 只对表中 GNR schema 作正式硬件资格声明；
-- bundled registry 中其他 mapping 是可选输入，不自动获得支持状态；
+- bundled registry 仅含表中七组 mapping；外部 XML 不自动获得支持状态；
 - 物理 topology 不从 `telemN` 推断，需要显式 CSV；
 - counter、invalid marker 和空间聚合规则需要平台确认后显式配置；
-- SRF、OOB 和 SHC 不属于 0.7.0 运行范围。
+- SRF、OOB 和 SHC 不属于 0.8.0 运行范围。

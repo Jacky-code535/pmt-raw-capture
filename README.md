@@ -1,164 +1,92 @@
 # Intel PMT Capture and Analysis Toolkit
 
-这是一个运行在 **GNR Linux 主机**上的命令行工具，用于完成 Intel PMT 数据的发现、采集、完整性检查、打包、XML 解码和统计分析。它直接读取 Linux PMT sysfs，不修改硬件配置；分析结果为 CSV 和 JSON，可继续用于 Excel、Python 或其他数据工具。
+在 **GNR Linux 主机**上 bulk 采集 Intel PMT 原始数据，使用包内 GNR XML 离线解码，生成长表指标 CSV 和逐 Core 看板。采集只读 Linux PMT sysfs，不修改硬件配置。
 
-当前版本：**0.7.0 GNR Edition**。采集与基础分析需要 Python 3.7+、Bash、tar 和 gzip，不需要安装 pip 包、数据库服务或 Go 程序。可选 Excel 与逐 Core 报告需要在分析端使用 Python 3.8+ 并安装 XlsxWriter。正式验证范围见 [GNR 兼容性](docs/compatibility.md)。
+当前版本：**0.8.0 GNR Edition**。需要 Python 3.7+、Bash、tar 和 gzip。默认流程无需 pip 安装、数据库服务或联网。
 
-## 已实现功能
+**下载：[pmt-raw-capture-0.8.0.tar.gz](https://github.com/Jacky-code535/pmt-raw-capture/releases/download/v0.8.0/pmt-raw-capture-0.8.0.tar.gz)**
 
-| 阶段 | 命令 | 作用 | 主要输出 |
-| --- | --- | --- | --- |
-| 设备发现 | `inventory` | 列出主机上的 PMT 区域、GUID 和数据长度 | JSON inventory |
-| 数据采集 | `start` | 按时间间隔读取所有 PMT 区域 | 原始 gzip snapshot、运行清单和日志 |
-| 任务控制 | `status` / `stop` / `resume` | 查看、停止或继续前台及后台任务 | 任务状态 |
-| 完整性检查 | `verify` | 检查快照数量、结构、长度和 SHA-256 | 验证报告 |
-| 结果归档 | `pack` / `unpack` | 为跨主机离线分析创建或展开归档 | tar.gz 结果包 |
-| 平台验证 | `validate-platform` | 按精确 `GUID + Size` 检查 XML schema | JSON 验证报告 |
-| 解码分析 | `analyze` | 解码 raw，重建序列并计算统计和数据质量 | `decoded.csv`、`series.csv`、`summary.csv`、`data-quality.csv` |
-| 结果对比 | `compare` | 比较正常和异常 run 的统计结果 | 差异 CSV |
-| 指标报告（可选） | `report` | 按 JSON 计算相邻样本指标并生成 Excel 原生图表 | Core/Socket/System 指标 CSV、统计摘要、xlsx |
-| 采集后自动分析（可选） | `analyze --report` | 一次执行 raw 验证、XML 解码、JSON 指标计算和逐 Core 可视化 | 分析目录及 `<分析目录>-report/逐Core看板.html` |
-
-核心工作流：
+## 工作流
 
 ```text
-inventory -> start -> verify -> validate-platform -> analyze
+bulk raw → 内置 GNR XML → decoded.csv → metrics.csv → dashboard.html
 ```
 
-本机分析可直接读取 run 目录。跨主机离线分析时，在采集端使用 `pack` 创建归档，在分析端使用 `unpack` 展开归档。SRF、OOB/Redfish 采集、SHC 日志解析和自动故障归因不属于当前版本。
-需要逐 Core 图表的完整后处理命令是 `analyze --report`。报告阶段在离线分析端执行，不改变采集端的软件要求。
+| 结果 | 内容 |
+| --- | --- |
+| `decoded.csv` | 完整 XML 解码观测，保留原值、单位、时间、序号与来源 |
+| `metrics.csv` | 相同长表组织方式；按确认的公式计算区间增量、速率、桶占比和加权平均估计 |
+| `dashboard.html` | 可选择 PMT aggregator 和 XML 本地 Core 的离线关键指标趋势 |
 
-## 第一次使用
+原始 raw 始终保留。分析目录另有 `analysis.json` 和 `provenance/`，记录验证结果、XML、公式及输入指纹；默认不生成多层视图、事件分析、统计 CSV 或 Excel。
+
+## 使用
 
 ### 1. 下载并解压
 
-下载 [`pmt-raw-capture-0.7.0.tar.gz`](https://github.com/Jacky-code535/pmt-raw-capture/releases/download/v0.7.0/pmt-raw-capture-0.7.0.tar.gz)，放到 GNR 主机后执行：
-
 ```bash
-mkdir -p "$HOME/pmt-0.7.0"
-cd "$HOME/pmt-0.7.0"
-
-curl -fL -O https://github.com/Jacky-code535/pmt-raw-capture/releases/download/v0.7.0/pmt-raw-capture-0.7.0.tar.gz
-tar -xzf pmt-raw-capture-0.7.0.tar.gz
-cd pmt-raw-capture-0.7.0
-
+curl -fL -O https://github.com/Jacky-code535/pmt-raw-capture/releases/download/v0.8.0/pmt-raw-capture-0.8.0.tar.gz
+tar -xzf pmt-raw-capture-0.8.0.tar.gz
+cd pmt-raw-capture-0.8.0
 ./pmt-capture --version
 ```
 
-预期版本输出为 `0.7.0`。如果主机不能访问 GitHub，可以先在其他机器下载，再将压缩包传到 GNR 主机。
+不能联网的主机可接收其他机器下载的压缩包。正式包内置七组已验证 GNR schema，见 [GNR 兼容性](docs/compatibility.md)。
 
-### 2. 完成首次三样本检查
+### 2. 采集
 
-以下命令在同一台 GNR 主机采集三份数据并生成分析结果。将 `gnr-host` 改为便于识别的机器名称：
-
-```bash
-cd "$HOME/pmt-0.7.0/pmt-raw-capture-0.7.0"
-RUN_ID="gnr-test-$(date -u +%Y%m%dT%H%M%SZ)"
-ENDPOINT="gnr-host"
-
-# 发现 PMT 区域
-sudo ./pmt-capture inventory | tee "inventory-$RUN_ID.json"
-
-# 每隔 2 秒采集一份，共 3 份
-sudo ./pmt-capture start --endpoint "$ENDPOINT" --platform GNR \
-  --run-id "$RUN_ID" --interval 2 --samples 3
-
-# 检查采集结果
-sudo ./pmt-capture verify --run-dir "results/$RUN_ID"
-
-# 验证平台并分析
-ANALYSIS="analysis-$RUN_ID"
-sudo ./pmt-capture validate-platform --run-dir "results/$RUN_ID" \
-  | tee "validation-$RUN_ID.json"
-sudo ./pmt-capture analyze --run-dir "results/$RUN_ID" --output "$ANALYSIS"
-```
-
-完成后，分析结果位于 `analysis-<run-id>/`。其中 `decoded.csv` 是解码数据，`series.csv` 是时间序列，`summary.csv` 是统计摘要，`data-quality.csv` 是数据质量汇总。
-需要逐 Core 报告时，可在完成采集后，在配有 Python 3.8+ 与 XlsxWriter 的离线主机以 `analyze --report` 代替最后一条 `analyze`；若运行目录只有 root 可以读取，须以具有读权限的账户执行且确认该账户使用的 Python 也安装了可选依赖。示例见下文“文档”的报告命令。
-
-跨主机离线分析的归档与解包命令见[使用指南](docs/usage.md)。
-
-## 后台采集
-
-每分钟一份，共 600 份，约 10 小时：
+每 2 秒一份，计划采集 60 秒：
 
 ```bash
-sudo ./pmt-capture start --endpoint lab-host --run-id experiment-001 \
-  --interval 60 --samples 600 --background
-sudo ./pmt-capture status --run-dir ./results/experiment-001
+sudo ./pmt-capture start --endpoint gnr-host --run-id trial-001 \
+  --duration-seconds 60 --interval 2
 ```
 
-停止与续采：
+`--duration-seconds` 与 `--samples` 二选一。首份立即采集，上例计划在第 0、2、…、58 秒启动，共 30 份。时长定义为计划采样窗口，不是硬截止时间；读取超时或机器繁忙可能延长实际完成时间。间隔支持正小数。
+
+长任务可加 `--background`；`--cpu 2` 可将采集进程固定到 Linux 逻辑 CPU 2。
 
 ```bash
-sudo ./pmt-capture stop --run-dir ./results/experiment-001
-sudo ./pmt-capture resume --run-dir ./results/experiment-001 --background
+sudo ./pmt-capture status --run-dir results/trial-001
+sudo ./pmt-capture stop --run-dir results/trial-001
+sudo ./pmt-capture resume --run-dir results/trial-001 --background
 ```
 
-`stop` 后用 `status` 确认 `busy: False` 再续采或打包。续采沿用原计划，保留已采数据；主机重启后需手动续采。
+续采沿用原计划，主机重启后需手动恢复。
 
-## 离线后解析与指标
+### 3. 离线处理
 
-采集端**不**内置平台指标表，也不会在采集中解码 CSV。完整流程与 EDP 类似：**raw 永久保留 → XML 解码 → 时间序列重建 → 统计与分层视图 →（可选）与实验时间轴对齐**。
+采集结束后，在可读取 raw 的账户下运行：
 
 ```bash
-# 可选：记录平台/XML 标签与 BIOS，便于 10h 长跑追溯
-sudo ./pmt-capture start --endpoint gnr-rack-01 --run-id run-20260910 \
-  --interval 60 --samples 600 --cpu 2 --platform GNR --xml-version approved-rev
-
-./pmt-capture archive --run-dir results/run-20260910 --output archives/run-20260910
-
-./pmt-capture analyze --run-dir results/run-20260910 \
-  --topology topology.csv --policies policies.json --events experiment-events.csv \
-  --output analysis/run-20260910
+./pmt-capture analyze --run-dir results/trial-001 --output analysis/trial-001
 ```
 
-`analyze` 在新目录下生成多层输出（长表 CSV，便于筛选或透视）：
+工具自动验证 raw、精确匹配 GUID + Size、解码、计算指标并生成看板。打开 `analysis/trial-001/dashboard.html` 即可查看。输出必须是新目录，失败不会覆盖已有结果或修改 raw。
 
-| 输出 | 含义 |
-| --- | --- |
-| `decoded.csv` | 解码后的观测值：`timestamp`、`endpoint`、`metric`、`value`、`unit`，以及 aggregator、GUID、序号与拓扑列 |
-| `series.csv` | 序列重建结果：在 decoded 基础上增加 `measure`（`value` / `delta` / `rate`）与 `validity`（缺样、回绕、无效标记等） |
-| `summary.csv` | 每条序列统计：`mean`、`min`、`max`、`p95`、`std`、`cv`、`valid_count` |
-| `data-quality.csv` | 每条序列的计划数、观测数、有效数、无效数、缺失数和有效率 |
-| `view-system.csv` … `view-aggregator.csv` | 按 **system → socket → die → module → endpoint → aggregator** 分 scope 的序列视图（需 `topology.csv`；不假设 endpoint 等于 CPU core） |
-| `aligned.csv` | 与可选实验事件 CSV 对齐：`timestamp`、`phase`、`test_item`、PMT 指标与 `value` |
-| `phase-summary.csv` | 每个 phase / test_item / status 的序列统计 |
-| `failure-windows.csv` | 显式 `failure_time` 前后窗口内的样本 |
-| `analysis.json` | 原始快照、XML、解码器与分析程序的内容指纹与统计语义说明 |
+跨主机处理时，用 `pack` / `unpack` 传输原始任务，见 [离线工作流](docs/offline.md)。
 
-正常与失败 run 对照：`./pmt-capture compare --baseline analysis/normal --candidate analysis/failed --by-test --output diff.csv`。
+## 指标与可视化
 
-指标集合随平台 XML 变化，具体字段名以解码结果为准。拓扑视图不隐式求和，`valid_count` 不代表硬件健康；平台无效标记需要显式策略。XML 未定义的 FIVR 派生状态不会自动生成。
+metrics 与 decoded 都是一条指标观测占一行的长表，不是宽表。当前派生配置覆盖 CORE schema 的 47 项指标，包括温度、usage 增量、PVP 增量和速率、频率／电压加权估计、C6 桶占比及三类桶分布；其他 schema 的完整观测保留在 decoded 中。
+
+相邻样本差分使用每个 aggregator 的真实时间。首个累计读数作为基线；缺样、无效输入和计数下降的派生值留空，并记录原因。usage 增量不是 CPU 利用率；桶加权频率和电压是估计值，相关尺度仍有平台验证边界。
+
+看板从 metrics CSV 生成，显示七项关键趋势，独立 HTML 可离线打开。重新生成看板无需 raw、XML 或其他报告文件：
+
+```bash
+./pmt-capture view --input analysis/trial-001/metrics.csv --output core-view.html
+```
 
 ## 文档
 
-离线分析端使用 Python 3.8+ 安装可选依赖后执行：
-
-```bash
-python3 -m venv .venv
-. .venv/bin/activate
-python3 -m pip install -r requirements-report.txt
-./pmt-capture analyze --run-dir results/run-20260910 \
-  --output analysis/run-20260910 --report
-# 打开 analysis/run-20260910-report/逐Core看板.html
-```
-
-上述命令会先验证 raw 并按 XML 解码，再自动按 JSON 配置生成所有 Core 指标、Excel 和交互式 HTML，不要求用户手工操作 CSV。正式下载包内置批准的 XML registry，无须指定 `--metadata`；源码/基础包须补 `--metadata /path/to/pmt.xml`。在离线分析主机运行，采集端无需安装依赖；已有分析结果可单独运行 `./pmt-capture report --analysis-dir analysis/run-20260910 --output reports/run-20260910`，也适合报告阶段出错后重试。报告按序号处理解码结果并使用 SQLite 暂存统计。600 份真实硬件数据的全链路解码和性能仍须在目标主机验证。
-
-报告包含温度、Core usage 实验性累计量及增量、PVP counter 增量/速率、频率与电压桶加权估计、C6 占比和频率/温度/电压分布。输出中的 `逐Core看板.html` 可选择 aggregator 与任意 XML 本地 Core，查看七项关键趋势，每槽位最多约 600 个真实采样点；全量指标和逐行质量原因保存在 Core/Socket/System CSV，`metric-quality.csv` 汇总各类质量原因数量，Excel 包含全部 Core 宽表及代表性图表。首样本及无效区间留空；物理 Socket 视图需要明确的 core 拓扑映射。在线 dashboard 使用 Prometheus 滚动窗口，并非本工具的离线 CSV 输入；直方图时间尺度尚待平台确认，相关结果标为 provisional。配置、聚合规则和采样耗时测量见[指标与 Excel 报告](docs/report.md)。采集端仍无需安装第三方 Python 包。
-
 | 文档 | 内容 |
 | --- | --- |
-| [产品需求规格](REQUIREMENTS.md) | 功能需求、数据契约、兼容性和发布验收标准 |
-| [使用指南](docs/usage.md) | 参数、任务状态、结果文件与排障 |
-| [支持说明](SUPPORT.md) | 支持范围和问题反馈所需信息 |
-| [数据格式](docs/data-format.md) | 快照字段与解码接口 |
-| [离线工作流](docs/offline.md) | XML 解码、序列重建、统计、拓扑和实验对齐 |
-| [架构](docs/architecture.md) | 模块边界、数据流与兼容性 |
-| [平台数据](docs/platform-data.md) | XML 输入要求、验证和解码范围 |
-| [GNR 兼容性](docs/compatibility.md) | 已验证 GUID、XML 版本和支持边界 |
-| [服务部署](docs/service.md) | systemd 安装、开机启动和菜单操作 |
-| [更新记录](docs/changelog.md) | 各版本变更 |
+| [离线工作流](docs/offline.md) | 传输、解码、输出和兼容选项 |
+| [指标与看板](docs/report.md) | 公式、长表字段、数据质量和可视化选型 |
+| [使用指南](docs/usage.md) | 参数、任务状态与排障 |
+| [产品需求规格](REQUIREMENTS.md) | 当前范围和验收要求 |
+| [支持说明](SUPPORT.md) | 支持边界和问题反馈 |
+| [更新记录](docs/changelog.md) | 版本变化 |
 
-命令帮助：`./pmt-capture --help`。
+旧统计、事件对齐、对照分析与服务脚本保留兼容，不进入默认工作流。命令帮助：`./pmt-capture --help`。

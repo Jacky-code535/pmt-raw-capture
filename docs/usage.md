@@ -1,12 +1,12 @@
 # 使用指南
 
-适用版本：0.7.0 GNR Edition。下载和首次采集见 [README](../README.md)。本页列出完整参数、任务状态和排障方法。
+适用版本：0.8.0 GNR Edition。下载和首次采集见 [README](../README.md)。本页列出采集参数、任务状态和排障方法。
 
 `--interval` 是相邻采样计划开始时间的间隔，不是读取一份快照所需的时间。例如三份、间隔 10 秒时，计划开始时间为第 0、10、20 秒；每份实际读取耗时由 `duration_ms` 报告。
 
 ## 环境要求
 
-版本 0.7.0 提供 `--cpu N`（Linux 逻辑 CPU 编号）、`--platform GNR` 和 `--xml-version REV`。CPU 必须在当前 cpuset 允许范围内；后台启动与续采保留选择，实际采样 CPU 集合记录在 `run.json` 的 `EffectiveCPUs`。平台与 XML 版本标签由操作者提供，BIOS 信息从 DMI 读取。离线命令见[离线工作流](offline.md)。
+工具提供 `--cpu N`（Linux 逻辑 CPU 编号）、`--platform GNR` 和 `--xml-version REV`。CPU 必须在当前 cpuset 允许范围内；后台启动与续采保留选择，实际采样 CPU 集合记录在 `run.json` 的 `EffectiveCPUs`。平台与 XML 版本标签由操作者提供，BIOS 信息从 DMI 读取。离线命令见[离线工作流](offline.md)。
 
 | 要求 | 说明 |
 | --- | --- |
@@ -59,7 +59,8 @@ sudo ./pmt-capture pack --run-dir ./results/trial-001 --output ./output
 | 参数 | 含义 |
 | --- | --- |
 | `--endpoint lab-host` | 必填，机器标签；不是网络地址 |
-| `--samples 3` | 必填，计划采样份数，正整数 |
+| `--samples 3` | 计划采样份数，正整数；与 duration-seconds 二选一 |
+| `--duration-seconds 60` | 计划采样窗口，转换为 ceil(时长/间隔) 份；不是硬截止时间 |
 | `--interval 10` | 采样间隔，单位秒，可为正小数，默认 60；也可写 `--interval-seconds` |
 | `--run-id trial-001` | 本次任务名；省略时自动生成。新实验换名字，续采不要改目录名 |
 | `--output-root ./results` | 结果父目录，默认当前目录下的 `results` |

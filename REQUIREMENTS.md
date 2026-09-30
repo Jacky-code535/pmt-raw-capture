@@ -1,89 +1,49 @@
 # 产品需求规格
 
-## 1. 目的
+## 1. 核心流程
 
-Intel PMT Capture and Analysis Toolkit 用于在 GNR Linux 主机采集 Intel PMT
-原始遥测，并在本机或独立分析主机上完成数据验证、XML 解码、时间序列重建和统计分析。
-
-## 2. 运行环境
+GNR Linux bulk 采集 → 包内 XML 离线解码 → decoded 长表 → metrics 长表 → 逐 Core 可视化。
 
 | ID | 需求 |
 | --- | --- |
-| `ENV-001` | 采集端应运行 Linux，并可访问 `/sys/class/intel_pmt/telem*`。 |
-| `ENV-002` | 工具应支持 Python 3.7、3.10 和 3.13，且不依赖第三方 Python 包。 |
-| `ENV-003` | 离线分析不应要求连接平台数据服务；所需 XML 应随发布包提供。 |
+| CAP-001 | 支持自定义采样间隔，以及计划时长或样本数；首份立即采集 |
+| CAP-002 | 读取所有发现的 PMT region，保留原始 payload、身份、逐区域时间和采集状态 |
+| XML-001 | 正式包内置固定版本中选取的七组 GNR schema 及依赖，按精确 GUID + Size 匹配 |
+| DEC-001 | decoded.csv 完整保留非保留 XML 指标的解码值、单位、时间、序号及来源 |
+| MET-001 | metrics.csv 保持长表；对确认的指标计算区间增量、速率、桶占比或加权估计 |
+| MET-002 | 首样本、缺样、计数下降和无效输入有明确状态；不补零、不猜复位或回绕 |
+| VIS-001 | 看板从 metrics.csv 生成，支持选择 aggregator 和 XML 本地 Core |
+| VIS-002 | HTML 可独立离线打开，展示关键趋势；完整指标和时间序列保留在 CSV |
 
-## 3. 采集与任务控制
+## 2. 输出与边界
 
-| ID | 需求 |
-| --- | --- |
-| `CAP-001` | `inventory` 应列出每个 PMT region 的 AccessId、GUID 和 Size。 |
-| `CAP-002` | `start` 应按指定 interval 和 sample count 采集所有已发现 region。 |
-| `CAP-003` | 每份 snapshot 应保存时间、region 元数据、原始 payload 和完整状态。 |
-| `CAP-004` | 任一 region 读取失败时，snapshot 不得标记为 complete。 |
-| `CAP-005` | 新任务不得覆盖已有 run；每个实验应使用独立 run ID。 |
-| `OPS-001` | 工具应支持前台和后台采集。 |
-| `OPS-002` | `status` 应报告计划数、已尝试数、完整数、错误和运行状态。 |
-| `OPS-003` | `stop` 应停止任务并保留已采数据；`resume` 应按原计划继续。 |
+默认分析目录仅有两个 CSV：decoded.csv、metrics.csv；另有 dashboard.html、analysis.json 和 provenance/。不默认生成多层视图、统计／质量摘要 CSV、事件分析或 Excel。
 
-## 4. 数据完整性与归档
+当前完整解码覆盖 [GNR 兼容性矩阵](docs/compatibility.md) 的七组 schema；派生配置覆盖 CORE 的 47 项指标，不代表其他 schema 已完成语义转换。指标公式与有效性边界见 [指标与看板](docs/report.md)。
 
-| ID | 需求 |
-| --- | --- |
-| `INT-001` | snapshot 应原子写入，避免将部分写入文件识别为有效样本。 |
-| `INT-002` | 新 snapshot 应在 manifest 中记录 SHA-256。 |
-| `INT-003` | `verify` 应检查格式、序列、region、payload 长度、哈希和计划样本数。 |
-| `ARC-001` | `pack` 应在归档前执行验证，并默认拒绝不完整或损坏的 run。 |
-| `ARC-002` | `unpack` 应拒绝路径穿越、链接、重复成员和超限归档。 |
-| `ARC-003` | 归档和解包不得改变原始 snapshot 内容。 |
+累计量差分使用同一来源的相邻采样。频率与电压按桶增量加权估计，不能称为瞬时测量值。离线窗口不等同于在线 Prometheus 滚动窗口。物理拓扑仅接受已确认映射，不能由 telem 编号或零读数推断。
 
-## 5. 平台数据与解码
+## 3. 可靠性与辅助功能
 
 | ID | 需求 |
 | --- | --- |
-| `XML-001` | 发布包应包含固定版本的 Intel PMT XML registry 及来源记录。 |
-| `XML-002` | schema 应仅按精确 `GUID + Size` 匹配。 |
-| `XML-003` | `validate-platform` 应分别报告 mapping 和 decoder schema 是否有效。 |
-| `DEC-001` | `analyze` 应将原始 payload 解码为 metric、value 和 unit。 |
-| `DEC-002` | 不支持的 schema、layout 或 formula 应明确失败，不得静默省略指标。 |
-| `DEC-003` | 分析不得修改原始 run，并应记录输入、XML 和解码程序的内容指纹。 |
+| ENV-001 | Python 3.7、3.10、3.13；默认流程不依赖第三方 Python 包、数据库服务或网络 |
+| INT-001 | 原子写入与结果目录暂存；失败不发布半成品，不覆盖已有结果 |
+| INT-002 | 自动验证快照结构、完整性与原始内容指纹；错配 XML 或公式失败应明确报错 |
+| OPS-001 | 保留后台采集、状态、停止、续采、绑核、日志与元数据 |
+| ARC-001 | 保留 pack/unpack；拒绝危险归档，不改变原始快照内容 |
+| CMP-001 | 继续读取既有 intel-pmt-local-bulk/v1 run |
+| CMP-002 | 旧统计、事件、compare、外部 decoder 与服务脚本仅保留兼容入口 |
+| REL-001 | 正式包解压后直接运行，包含用户文档、配置和固定 GNR XML |
 
-## 6. 分析输出
+## 4. 验收
 
-| ID | 需求 |
-| --- | --- |
-| `ANA-001` | `decoded.csv` 应保存解码观测值及其时间、endpoint、aggregator 和 schema 身份。 |
-| `ANA-002` | `series.csv` 应区分 value、delta 和 rate，并标记 missing、reset、wrap 和 invalid。 |
-| `ANA-003` | `summary.csv` 应提供 mean、min、max、p95、std、CV 和 valid count。 |
-| `ANA-004` | `data-quality.csv` 应提供 expected、observed、valid、invalid 和 missing count。 |
-| `ANA-005` | 提供 topology 时，工具应生成 system 到 aggregator 的分层视图，不得从 telem ID 猜测物理拓扑。 |
-| `ANA-006` | 提供 events 时，工具应生成事件对齐、阶段统计和 failure window 输出。 |
-| `ANA-007` | `compare` 应比较两次分析中身份匹配的 series。 |
+1. 支持的 Python CI 矩阵通过，默认流程测试不依赖 XlsxWriter。
+2. 采样参数合法性、raw 完整性、XML 精确匹配和失败清理有回归测试。
+3. 公式测试覆盖实际时间差、整数增量、桶加权以及无效区间。
+4. 发布包包含且可加载七组 GNR schema，来源和文件清单可核查。
+5. 真实 GNR raw 回放生成完整 decoded、metrics 和看板；硬件采集复验与回放分开记录。
+6. CSV-only 看板重建及桌面／移动端浏览器检查通过。
+7. 公开下载包与完成验证的包一致。
 
-## 7. 兼容性与可运维性
-
-| ID | 需求 |
-| --- | --- |
-| `CMP-001` | 工具应继续读取既有 `intel-pmt-local-bulk/v1` run。 |
-| `CMP-002` | 没有 SHA-256 字段的旧 manifest 应继续按旧格式验证。 |
-| `OPS-004` | CLI 成功返回 0，操作失败返回 1，参数错误返回 2。 |
-| `OPS-005` | 采集、验证和分析错误应包含可定位问题的上下文。 |
-| `REL-001` | 发布包应包含运行代码、用户文档、配置示例、可选服务脚本和固定 XML。 |
-| `REL-002` | 发布包解压后应能直接运行，不需要 pip 安装或构建步骤。 |
-
-## 8. 当前范围
-
-当前版本支持 GNR Linux OS 侧 PMT 采集与离线分析。已验证 schema 见
-[GNR 兼容性矩阵](docs/compatibility.md)。SRF、OOB/Redfish 采集、SHC 日志解析、
-自动异常检测和硬件故障归因不在当前范围内。
-
-## 9. 发布验收
-
-每个正式版本应满足：
-
-1. 源码测试在 Python 3.7、3.10 和 3.13 全部通过；
-2. 发布包无需构建即可显示版本和命令帮助；
-3. 发布包包含固定 XML registry，且 XML 文件清单验证通过；
-4. 代表性 GNR 主机完成三样本 discovery、capture、verify、validate 和 analyze；
-5. `decoded.csv`、`series.csv`、`summary.csv` 和 `data-quality.csv` 成功生成；
-6. 公开下载文件与完成 GNR 验证的文件一致。
+SRF、OOB/Redfish、SHC、自动故障归因、Grafana 服务部署和新平台公式不在本版范围内。

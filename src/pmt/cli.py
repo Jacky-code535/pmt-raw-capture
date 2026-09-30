@@ -219,6 +219,7 @@ def build_parser() -> argparse.ArgumentParser:
     start.set_defaults(samples=None)
     start.add_argument("--interval", dest="interval_seconds", type=float, default=argparse.SUPPRESS, help="alias for --interval-seconds (default: 60)")
     start.add_argument("--background", action="store_true", help="detach; does not survive reboot")
+    start.add_argument("--duration-seconds", type=float, help="planned sampling window in seconds; alternative to --samples")
     descriptions = {
         "status": "show progress, running state and last verification result",
         "stop": "request a stop without deleting collected data",
@@ -267,20 +268,25 @@ def build_parser() -> argparse.ArgumentParser:
     analyze.add_argument("--failure-before", type=float, default=5.0)
     analyze.add_argument("--failure-after", type=float, default=5.0)
     analyze.add_argument("--allow-partial", action="store_true")
-    analyze.add_argument("--report", action="store_true", help="after decoding, generate JSON-defined metrics and an interactive per-Core report (requires XlsxWriter)")
-    analyze.add_argument("--report-output", type=Path, help="new report directory; default: <analysis output>-report")
+    analyze.add_argument("--legacy-analysis", action="store_true", help="compatibility: also export old statistics, views and event CSVs")
+    analyze.add_argument("--report", action="store_true", help="generate long metrics CSV and offline Core HTML (default)")
+    analyze.add_argument("--decode-only", action="store_true", help="only write decoded.csv and provenance")
+    analyze.add_argument("--report-output", type=Path, help="optional separate report directory; default: same analysis directory")
     analyze.add_argument("--report-metrics", type=Path, default=Path(__file__).resolve().parents[2] / "config/metrics-gnr.json", help="JSON metric definitions for --report")
-    analyze.add_argument("--report-topology", type=Path, help="confirmed physical Core mapping for Socket report views")
+    analyze.add_argument("--report-topology", type=Path, help="confirmed physical Core mapping; no automatic Socket rollups")
     compare = commands.add_parser("compare", help="compare matching series in two offline analysis summaries")
     compare.add_argument("--baseline", required=True, type=Path, help="baseline analysis directory")
     compare.add_argument("--candidate", required=True, type=Path, help="candidate analysis directory")
     compare.add_argument("--output", required=True, type=Path, help="new CSV path")
     compare.add_argument("--by-test", action="store_true", help="match phase and test item instead of whole-run statistics")
-    report = commands.add_parser("report", help="compute JSON-defined metrics and create an Excel workbook with charts")
+    report = commands.add_parser("report", help="recompute long metrics CSV and offline Core HTML from decoded data")
     report.add_argument("--analysis-dir", required=True, type=Path, help="existing analysis directory with decoded.csv and provenance")
     report.add_argument("--output", required=True, type=Path, help="new output directory outside the analysis input")
     report.add_argument("--metrics", type=Path, default=Path(__file__).resolve().parents[2] / "config/metrics-gnr.json")
     report.add_argument("--topology", type=Path, help="confirmed core mapping CSV: endpoint,aggregator,core,socket,die,physical_core,enabled")
+    view = commands.add_parser("view", help="generate offline HTML from metrics.csv alone")
+    view.add_argument("--input", required=True, type=Path)
+    view.add_argument("--output", required=True, type=Path)
     return parser
 
 
@@ -301,13 +307,25 @@ def main(argv=None) -> int:
     if not args.command:
         parser.print_help()
         return 0
-    if args.command == "analyze" and not args.report and (args.report_output or args.report_topology):
-        parser.error("--report-output and --report-topology require --report")
+    if args.command == "analyze":
+        if args.decode_only and args.report:
+            parser.error("--decode-only and --report cannot be combined")
+        args.report = not args.decode_only and (args.report or not args.legacy_analysis)
+        if not args.report and (args.report_output or args.report_topology):
+            parser.error("report options require metrics generation")
     try:
+        if args.command == "view":
+            from pmt.core_view import generate_from_csv
+            if args.output.exists() or args.output.is_symlink():
+                raise FileExistsError(str(args.output))
+            if args.output.resolve() == args.input.resolve():
+                raise ValueError("HTML output must differ from CSV input")
+            print(generate_from_csv(args.input, args.output))
+            return 0
         if args.command == "inventory":
             return capture.command_inventory(args)
         if args.command == "report":
-            from pmt.report import generate_report
+            from pmt.metrics import generate_report
             print(json.dumps(generate_report(args.analysis_dir, args.output, args.metrics, args.topology), indent=2))
             return 0
         if args.command == "dump":
@@ -322,8 +340,19 @@ def main(argv=None) -> int:
             print(json.dumps(report, indent=2))
             return 0 if report["valid"] else 1
         if args.command == "start":
+            if args.duration_seconds is not None:
+                if args.samples is not None:
+                    parser.error("choose --duration-seconds or --samples, not both")
+                if not math.isfinite(args.duration_seconds) or args.duration_seconds <= 0:
+                    parser.error("--duration-seconds must be finite and positive")
+                if not math.isfinite(args.interval_seconds) or args.interval_seconds <= 0:
+                    parser.error("--interval must be finite and positive")
+                count = args.duration_seconds / args.interval_seconds
+                if not math.isfinite(count):
+                    parser.error("duration divided by interval is too large")
+                args.samples = max(1, math.ceil(count))
             if args.samples is None or args.samples <= 0:
-                parser.error("start requires --samples with a positive count")
+                parser.error("start requires --samples or --duration-seconds with a positive value")
             if not math.isfinite(args.interval_seconds) or args.interval_seconds <= 0:
                 parser.error("--interval must be finite and positive")
             if args.resume:
@@ -335,11 +364,10 @@ def main(argv=None) -> int:
                 result = postprocess.archive_run(args.run_dir.resolve(), args.output, args.allow_partial)
             elif args.command == "analyze":
                 result = postprocess.analyze_run(args)
-                if args.report:
-                    from pmt.report import generate_report
-                    report_output = args.report_output or args.output.with_name(args.output.name + "-report")
+                if args.report and args.report_output:
+                    from pmt.metrics import generate_report
+                    report_output = args.report_output
                     result["report"] = generate_report(args.output, report_output, args.report_metrics, args.report_topology)
-                    result["report"]["core_view"] = str(report_output / "逐Core看板.html")
             else:
                 result = postprocess.compare_runs(args)
             print(json.dumps(result, indent=2))

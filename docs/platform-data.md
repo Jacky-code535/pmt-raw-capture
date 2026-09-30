@@ -1,7 +1,8 @@
 # Platform XML
 
-The v0.7.0 release package contains the approved Intel PMT XML registry at
-platform-data commit `df82b1741dec619300707881114f6b17b5204f60`. Its license,
+The v0.8.0 release package contains seven qualified GNR mappings selected from
+platform-data commit `df82b1741dec619300707881114f6b17b5204f60`. The generated registry
+contains only those mappings; common, layout and interface files are copied unchanged. Its license,
 source record and SHA-256 manifest are under `bundled-platform-data/`.
 
 Both XML commands use the bundled registry by default:

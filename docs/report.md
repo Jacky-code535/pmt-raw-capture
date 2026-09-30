@@ -1,166 +1,54 @@
-# Derived Metrics and Excel Reports
+# 指标与看板
 
-This is an optional offline stage after `analyze` in version 0.7.0. It does not change capture data,
-XML conversion rules, or the existing analysis files.
+0.8.0 默认流程：raw → XML 解码 → decoded 长表 → metrics 长表 → Core HTML。全程使用 Python 标准库，默认不生成 Excel。
 
-## Run
+## 长表契约
 
-On the analysis host, use Python 3.8+ and install the optional dependency in
-the same interpreter that runs `pmt-capture`:
+decoded 保存原始 XML 解码值；metrics 不改成宽表，一条来源明确的指标观测占一行。两者保留 `timestamp, endpoint, metric, value, unit, sequence, aggregator, guid` 及拓扑、measure、validity 列。
 
-```bash
-python3 -m venv .venv
-. .venv/bin/activate
-python3 -m pip install -r requirements-report.txt
-./pmt-capture analyze --run-dir results/run-001 --output analysis/run-001 --report
-# Open analysis/run-001-report/逐Core看板.html
-```
+metrics 的名称如 `C0.pvp64_rate`，额外记录 `core, physical_core, interval_start, interval_seconds, title, notes, numerator, denominator`。区间终点为 timestamp；瞬时量的起终点相同。numerator、denominator 用于正确汇总速率和桶加权结果，不是额外的 CSV。
 
-The `analyze --report` command verifies raw samples and decodes with the exact
-XML before evaluating the configured GNR metrics and producing the per-Core
-HTML and Excel workbook. The full package supplies an approved XML registry;
-for a source checkout or base package pass `--metadata /path/to/pmt.xml`.
-`--report-output`, `--report-metrics`, and `--report-topology` customize this
-stage. Analyzing without `--report` remains standard-library-only. To rerun
-only the report on an existing analysis, use:
+当前 [GNR 配置](../config/metrics-gnr.json) 对精确 CORE GUID `0x22473996`、14496 字节定义 64 个 XML 槽位和每槽位 47 项指标。该槽位数不等于物理启用 Core 数。其他 schema 的解码值完整保存在 decoded；尚无确认公式的字段不自动猜测派生含义。
 
-```bash
-./pmt-capture report --analysis-dir analysis/run-001 --output reports/run-001
-```
+## 计算
 
-If report generation fails after decoding, the new analysis directory is
-retained; resolve the dependency or metric issue and rerun the standalone
-`report` command into a new directory. Do not retry `analyze` with the same
-output path. No charting runs automatically inside a background capture
-process: a separate post-capture analysis step avoids installing XML and
-Excel dependencies on the hardware collector host.
-
-The input must contain `decoded.csv`, `analysis.json`, and `provenance/run.json`.
-The output must be a new directory outside the input. Failed generation discards
-staged output; existing reports are never overwritten. Capture and decoding remain
-standard-library-only and keep their existing Python 3.7 minimum.
-
-Outputs:
-
-| File | Content |
-| --- | --- |
-| `pmt-report.xlsx` | Native Excel charts, partitioned wide Core/Socket/System data, Summary, quality reason counts, Definitions, Chart Data |
-| `逐Core看板.html` | Standalone offline viewer: choose aggregator and XML-local Core; seven key trends, up to about 600 actual sample points per slot |
-| `core-metrics.csv` | Every configured XML-local core, sample and metric, including excluded values |
-| `socket-metrics.csv` | Confirmed mapped cores only; omitted without a usable socket mapping |
-| `system-metrics.csv` | Observed slots except explicitly disabled cores |
-| `metric-summary.csv` | Per-scope aggregates, sample statistics and excluded counts |
-| `metric-quality.csv` | Per-scope/metric quality reason counts, including valid, provisional and excluded rows |
-| `metrics.json`, `topology.csv` | Frozen configuration and optional supplied core mapping |
-| `report.json` | Input/output fingerprints, implementation fingerprint and provenance |
-
-Core/Socket/System CSV rows retain each observation's quality, notes, numerators,
-denominators, actual interval timestamps, member counts and region timestamp skew.
-`metric-quality.csv` groups row counts by level, scope, metric and quality; it does
-not duplicate the large detail tables. Blank values are unavailable, not zero. Excel charts
-reference worksheet cells and cache plotted values; formulas are evaluated by the
-report engine, not by Excel. Re-run the report after changing JSON configuration.
-Core line charts select up to six representative local cores, one per aggregator
-when available. Chart points are capped at 1200 per series; the workbook's wide
-data and CSV retain every interval. Excel wide data splits into numbered sheets
-before the 1,048,576-row limit, while its Quality sheet summarizes counts of
-reasons per scope/metric. Per-row reasons and notes remain in the level CSVs.
-The HTML embeds only temperature, experimental usage increase, PVP64/PVP1024
-rates, all-bucket frequency/voltage estimates and C6 share. All configured
-metrics, including individual histogram buckets, remain in CSV and Excel.
-
-Derived Core rows are streamed one sequence at a time and per-series statistics
-are staged in a temporary SQLite database, removed after generation. The
-decoded CSV must be ordered by increasing sequence, as produced by `analyze`;
-out-of-order inputs fail explicitly. A 600-sample/six-aggregator synthetic
-decoded run (10,828,800 Core rows) completed on the offline development host;
-the final report stage took 7 min 42 sec and peaked at approximately 888 MiB RSS
-with Python 3.14. The Core CSV was 2.6 GiB, the quality-count CSV 1.3 MiB,
-and the standalone HTML 70 MiB. This measures reporting from synthetic decoded
-data, not capture or raw-to-XML decoding. Plan for several gigabytes of report
-output plus SQLite staging and validate the entire
-pipeline with real long-running raw data on the intended offline host.
-
-## Metric Configuration
-
-`--metrics config/metrics-gnr.json` is the default. Format `pmt-metrics/v1` matches
-the exact CORE GUID `0x22473996` and 14496-byte inventory regions. It currently
-defines 64 XML slots per region; this is not a physical enabled-core count.
-It does not implement arbitrary expression execution or metrics for other GUIDs.
-
-Each metric has an `id`, `title`, `unit`, `source`, `operation`, `spatial` and
-human-readable `formula`. Sources use full decoded group-qualified XML names,
-with `{core}`, `{bucket}`, `{pair}`, `{pair_next}` or `{quad0}` through `{quad3}`.
-The engine uses `operation` and its parameters; `formula` is documentation.
-
-| Operation | Per-window computation | Default use |
+| 原始量 | 区间处理 | 输出 |
 | --- | --- | --- |
-| `gauge` | Current value, checked against optional minimum/maximum | Temperature |
-| `delta` | Current minus previous, preserving integer subtraction | PVP 64/1024-cycle counts |
-| `rate` | Delta divided by actual elapsed seconds | PVP counts/second |
-| `histogram_share` | 100 * selected bucket deltas / all bucket deltas | C6 share |
-| `histogram_mean` | Sum of selected deltas * weights / selected deltas | Non-C6 frequency estimate |
-| `histogram_distribution` | Expand all buckets into individual shares | Frequency/voltage distributions |
+| 温度 | 当前解码值 | C |
+| usage 累计量 | 本次减上次 | 实验性 usage 增量，不是利用率 |
+| PVP 64/1024 累计事件 | 本次减上次；再除以实际时间差 | count、count/s |
+| 频率、电压、温度各桶累计驻留量 | 每桶本次减上次 | 作为分布与加权平均的输入 |
+| 桶分布 | 100 × 某桶增量 / 全部桶增量之和 | % |
+| 平均频率／电压估计 | Σ(桶增量 × 桶代表值) / Σ桶增量 | MHz、mV |
 
-Histograms require `buckets`; shares/means use `selected`, means use `weights`,
-distributions use `labels`. Optional `invalid_values` identify poison markers;
-`provisional` carries unresolved semantic limitations into every output.
-`charts` entries select a metric ID (or distribution prefix), title, unit and
-`line` or `stacked_column` type.
+配置包含含 C6 和非 C6 两种频率估计；频率 r0 为 C6，按 0 MHz 纳入含 C6 平均。电压 r0 为低于 602 mV，不是 C6。开放区间使用配置中注明的近似代表值。
 
-The GNR configuration also includes dashboard-style Core usage lifetime/interval
-increase (experimental U64.38.26 counter, not CPU utilization), all-bucket
-frequency mean (C6 r0 at 0 MHz), all-bucket voltage mean (r0 below 602 mV),
-and temperature histogram shares. Those use adjacent captured samples, **not**
-the live dashboard's rolling 5-minute Prometheus `increase`/`rate` window.
-The interactive viewer shows all configured Core slots, including unknown or
-zero-only slots; zero alone never proves the physical Core is disabled. It
-selects actual samples at a fixed stride and retains the last sample, without
-interpolating skipped intervals.
+公式参考 inband dashboard 的指标含义，但时间窗口不同：这里用相邻采样区间，在线 Prometheus 使用滚动 `increase` / `rate` 并具有边界外推语义。因此不能把两者的点值当成相同结果。直方图时间尺度尚待平台确认，桶占比和加权估计携带 `provisional` 状态。
 
-Spatial aggregation is explicit: temperature uses `max`, PVP uses `sum`, and
-histograms use `ratio`, recomputing pooled numerators/denominators rather than
-averaging percentages. Summary `aggregate` sums deltas, time-weights rates,
-denominator-weights histograms, and sample-averages gauges. Its other statistics
-(`mean`, `p95`, etc.) describe valid per-window values. Temperature rollup therefore
-means a per-window maximum; its temporal aggregate is the mean of these maxima.
+## 数据质量
 
-The first counter observation is a baseline. Missing inputs, sequence gaps,
-elapsed time above `max_gap_factor * IntervalSeconds`, non-increasing timestamps,
-counter declines, missing/stale heartbeat and changes in `AGG_DATA_LOSS_COUNT`
-exclude affected windows. No reset or wrap is guessed. Missing snapshots at
-otherwise observed sequences are explicit; completely absent sequences are
-detected at the next observation, not synthesized into the chart. First-sample
-gauges carry `freshness_unchecked_first_sample`. Partial rollups expose
-`valid_members / expected_members` for the supplied/observed set, not certification
-of complete physical platform coverage. A full-size run may generate large
-CSV and Excel files; verify free disk space before offline analysis.
+首个累计读数作为基线。缺输入、缺样、时间倒退、间隔超过配置阈值、计数下降、heartbeat 不更新或数据丢失计数改变时，受影响的派生值留空并记录 validity。零是实际数值，不代表缺失或 Core 未启用。不补零、不插值、不猜复位与回绕。
 
-## Physical Topology
+所有已配置指标、所有采样点都保存在 metrics。计算按采样序号流式进行，输入必须按递增序号组织；无需构建六层视图或全量统计数据库。
 
-`report --topology` uses a core-level mapping, distinct from `analyze --topology`:
+## 看板
 
-```csv
-endpoint,aggregator,core,socket,die,physical_core,enabled
-example-host,telem9,0,0,0,0,true
+```bash
+./pmt-capture view --input analysis/trial-001/metrics.csv --output core-view.html
 ```
 
-This is a format example, not an asserted mapping for any platform. Supply confirmed
-identities from platform documentation or validated topology data. `core` is the
-XML-local slot; `enabled` is exactly `true` or `false`. Duplicate PMT identities
-and duplicate enabled physical identities are rejected. Explicitly disabled slots
-are excluded from rollups; unmapped slots remain in System with unknown-enabled
-notes and do not appear in Socket. Zero counters do not establish a disabled core.
+看板生成只读取这一张 CSV，不依赖 raw、XML、摘要 CSV、Excel 或外部服务。HTML 内嵌选定数据，JavaScript 通过 SVG polyline 和 circle 绘图；无需 CDN，移动端自动单列显示。
 
-## Interpretation Limits
+默认显示温度、usage 增量、PVP64/PVP1024 速率、含 C6 频率估计、电压估计和 C6 桶占比。横轴使用实际 UTC 时间，悬停点显示时间、序号、值与质量。每条序列最多约 600 个实际样本点，保留末点；跨被省略的无效点不连接折线。降采样不保留所有短峰值，完整数据以 metrics CSV 为准。
 
-- Histogram time scaling is not yet verified against wall time. Shares and
-  bucket-midpoint frequency are provisional, not calibrated utilization or
-  instantaneous clock measurements. Open-ended frequency bins use approximate
-  representative values from the JSON; XML output is not silently rescaled.
-- Voltage bucket r0 is below 602 mV, not C6. The voltage distribution is not
-  an active-only voltage calculation. Frequency r0 denotes C6.
-- PMT regions are read sequentially, not atomically. System combines observations
-  with different timestamps and records the skew.
-- Input hashes establish artifact consistency, not independent hardware truth or
-  a new raw-to-CSV decode. Finite values do not certify hardware health.
+## 可视化选型
+
+| 方式 | 适用场景 | 部署要求 |
+| --- | --- | --- |
+| 自包含 HTML（本版） | 单次实验离线交付、直接打开结果 | 无服务，无联网依赖 |
+| Plotly 或 ECharts 自包含 HTML | 更丰富的缩放、框选、图例与曲线比较 | 打包固定版本的图表库，可继续离线 |
+| Grafana | 多主机、持续采集、多人共享、告警 | Grafana 服务、数据源和导入流程 |
+
+当前优先使用离线 HTML。以后增强交互时，可替换图表库而不改变 metrics 数据契约。Grafana 可由部署脚本安装，但它不是单个静态 HTML；通常需把历史指标导入 PostgreSQL 等数据源，或通过 CSV 数据源插件读取可访问的文件服务。已有区间速率不应在 Grafana 中再次计算 rate。
+
+本包不安装 Grafana，也不启动网络服务。旧 Excel 实现仍留在源码中作兼容测试，默认命令不再调用。

@@ -9,7 +9,8 @@ import sys
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
-from pmt.report import generate_report, load_metrics
+from pmt.metrics import generate_report
+from pmt.report import load_metrics, source_names
 
 
 def main():
@@ -42,18 +43,24 @@ def main():
                 values = {config["guards"]["heartbeat"]: sequence,
                           config["guards"]["loss"]: 0}
                 for core in range(config["cores"]):
-                    values["C{0}_C{1}_C{2}_C{3}_TEMP.C{4}_TEMP".format(
-                        core // 4 * 4, core // 4 * 4 + 1, core // 4 * 4 + 2,
-                        core // 4 * 4 + 3, core)] = 40 + core % 10
-                    values["C{0}_PVP_THROTTLE_64.C{0}_PVP_THROTTLE_64".format(core)] = sequence * 10 + core
+                    for definition in definitions:
+                        for bucket, name in enumerate(source_names(definition, core)):
+                            values[name] = (40 + core % 10 if definition["id"] == "temperature_c"
+                                            else sequence * (bucket + 1) + core)
                 for metric, value in values.items():
                     writer.writerow(dict(common, metric=metric, value=value))
     report = generate_report(source, args.output_root / "report", metrics_path)
     expected = args.samples * len(inventory) * config["cores"] * len(definitions)
-    if report["core_metric_rows"] != expected:
-        raise AssertionError("expected {} Core rows, got {}".format(expected, report["core_metric_rows"]))
+    if report["metric_rows"] != expected:
+        raise AssertionError("expected {} Core rows, got {}".format(expected, report["metric_rows"]))
+    counts = {}
+    with (args.output_root / "report/metrics.csv").open(newline="") as source:
+        for row in csv.DictReader(source):
+            counts[row["validity"]] = counts.get(row["validity"], 0) + 1
+            if int(row["sequence"]) > 1 and row["value"] == "":
+                raise AssertionError("unexpected missing synthetic metric: " + row["metric"])
     print(json.dumps({"samples": args.samples, "expected_core_rows": expected,
-                      "report": report}, indent=2))
+                      "quality_counts": counts, "report": report}, indent=2))
 
 
 if __name__ == "__main__":

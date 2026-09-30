@@ -1,29 +1,36 @@
-# v0.6.4 GNR Edition
+# v0.8.0 GNR Edition
 
-Intel PMT Capture and Analysis Toolkit 0.6.4 为 GNR Linux 提供一套命令行工作流，
-覆盖 PMT 设备发现、原始数据采集、完整性检查、结果打包、XML 验证、指标解码、
-时间序列重建和统计分析。
+将默认流程收敛为 bulk raw → 内置 GNR XML → decoded 长表 → metrics 长表 → Core 看板。
 
-## Download
+**下载：[pmt-raw-capture-0.8.0.tar.gz](https://github.com/Jacky-code535/pmt-raw-capture/releases/download/v0.8.0/pmt-raw-capture-0.8.0.tar.gz)**
 
-下载 `pmt-raw-capture-0.6.4.tar.gz`，解压后即可运行。工具包包含采集、解码、
-分析程序以及 GNR 所需的 XML registry。
+## 主要变化
 
-第一次使用请从 [README](https://github.com/Jacky-code535/pmt-raw-capture#readme)
-开始，完整命令参数和排障方法见
-[使用指南](https://github.com/Jacky-code535/pmt-raw-capture/blob/main/docs/usage.md)。
+- 新增 `start --duration-seconds`，与 `--samples` 二选一；间隔支持正小数。
+- `analyze` 默认在同一目录生成 `decoded.csv`、`metrics.csv` 和 `dashboard.html`，另保留追溯信息。
+- metrics 保持长表，包含已配置 Core 指标的区间增量、速率、桶占比和加权频率／电压估计。
+- 不再默认生成多层视图、统计／事件 CSV 和 Excel，无需安装 XlsxWriter。
+- 新增 `view --input metrics.csv --output view.html`，仅凭指标 CSV 重建离线看板。
+- 看板使用真实时间轴，跨被省略的无效点断线；支持桌面和移动端。
+- 包内仅保留七组已验证 GNR schema 及依赖，来自同一固定版本，schema 内容不变。
 
-## Main outputs
+## 使用
 
-- `decoded.csv`：解码后的 PMT 值；
-- `series.csv`：包含有效性状态的 value、delta 和 rate；
-- `summary.csv`：mean、min、max、p95、standard deviation 和 CV；
-- `data-quality.csv`：expected、observed、valid、invalid 和 missing 数量。
+```bash
+sudo ./pmt-capture start --endpoint gnr-host --run-id trial-001 --duration-seconds 60 --interval 2
+./pmt-capture analyze --run-dir results/trial-001 --output analysis/trial-001
+```
 
-## Support boundary
+打开 `analysis/trial-001/dashboard.html`。60 秒、2 秒间隔计划在第 0 至 58 秒启动 30 份采样；不是硬截止时间。长任务可加 `--background`。
 
-正式验证范围是兼容性矩阵中的七组精确 `GUID + Size` schema。长时间采集前请查看
-[GNR 兼容性矩阵](https://github.com/Jacky-code535/pmt-raw-capture/blob/main/docs/compatibility.md)。
+## 兼容与边界
 
-0.6.4 增加正式的产品需求规格，覆盖采集、完整性、归档、解码、分析、兼容性和发布
-验收。用户文档统一使用采集端、分析端、跨主机离线分析和结果归档术语。
+旧 raw v1 继续兼容。旧多层分析需显式使用 `--legacy-analysis`；只要原始解码表可用 `--decode-only`。`report` 现在生成长表 metrics 和 HTML，不再生成 Excel。
+
+完整解码覆盖七组 GNR schema；派生配置目前覆盖 CORE 的 47 项指标。其他 schema 的观测保留在 decoded，不声称已完成全部语义转换。看板展示其中七项关键趋势，最多约 600 个实际显示点，完整时序在 CSV。
+
+直方图加权值仍为 provisional 估计；usage 增量不是 CPU 利用率；离线相邻区间不是在线 Prometheus 五分钟滚动窗口。本版不部署 Grafana，不扩展硬件资格范围。
+
+验证包含源码测试、真实 GNR raw 回放、完整输入的合成规模测试、包内 XML 检查和桌面／移动端浏览器检查。真实 raw 回放不等于重新上机采集；本次未进行新的硬件长跑。
+
+使用说明见 [README](https://github.com/Jacky-code535/pmt-raw-capture#readme)。

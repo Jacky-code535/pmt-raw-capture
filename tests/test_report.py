@@ -64,6 +64,65 @@ class MetricTest(unittest.TestCase):
 
 
 class ReportDataTest(unittest.TestCase):
+    def test_long_metrics_and_csv_only_viewer(self):
+        from pmt.metrics import generate_report as compact_report
+        from pmt.core_view import build_metrics_data, generate_from_csv
+        self.write_samples()
+        (self.root / "analysis.json").write_text("{}")
+        path = self.root / "config.json"
+        path.write_text(json.dumps(dict(self.config, metrics=self.definitions)))
+        output = self.root.parent / (self.root.name + "-compact")
+        self.addCleanup(__import__("shutil").rmtree, output, True)
+        result = compact_report(self.root, output, path)
+        self.assertEqual(result["metric_rows"], 6)
+        self.assertEqual([entry.name for entry in output.glob("*.csv")], ["metrics.csv"])
+        self.assertFalse((output / "pmt-report.xlsx").exists())
+        with (output / "metrics.csv").open() as stream:
+            rows = list(csv.DictReader(stream))
+        self.assertEqual(rows[0]["value"], "")
+        self.assertEqual(rows[2]["value"], "0.5")
+        self.assertEqual(rows[2]["metric"], "C0.pvp64_rate")
+        self.assertEqual(rows[2]["interval_seconds"], "2.0")
+        data = build_metrics_data(output / "metrics.csv")
+        self.assertEqual(data["scopes"]["host/telem1/C0"]["aggregate"]["pvp64_rate"], 0.5)
+        __import__("shutil").rmtree(output / "provenance")
+        generate_from_csv(output / "metrics.csv", output / "standalone.html")
+        self.assertTrue((output / "standalone.html").is_file())
+
+    def test_compact_failure_discards_output(self):
+        from pmt.metrics import generate_report as compact_report
+        self.write_samples((2, 1))
+        (self.root / "analysis.json").write_text("{}")
+        path = self.root / "config.json"
+        path.write_text(json.dumps(dict(self.config, metrics=self.definitions)))
+        output = self.root.parent / (self.root.name + "-failed")
+        with self.assertRaises(ValueError):
+            compact_report(self.root, output, path)
+        self.assertFalse(output.exists())
+
+    def test_csv_viewer_preserves_omitted_gap(self):
+        from pmt.core_view import build_metrics_data
+        path = self.root / "metrics.csv"
+        fields = ("timestamp", "endpoint", "aggregator", "core", "sequence", "metric", "value",
+                  "unit", "title", "measure", "validity", "numerator", "denominator")
+        with path.open("w", newline="") as source:
+            writer = csv.DictWriter(source, fields)
+            writer.writeheader()
+            for sequence in range(1, 606):
+                writer.writerow(dict(timestamp=(datetime(2026, 1, 1, tzinfo=timezone.utc) +
+                                                timedelta(seconds=sequence)).isoformat(),
+                                     endpoint="host", aggregator="telem1", core=0, sequence=sequence,
+                                     metric="C0.temperature_c", value="" if sequence == 2 else 40,
+                                     unit="C", title="Temperature", measure="gauge",
+                                     validity="missing_input" if sequence == 2 else "valid",
+                                     numerator="", denominator=""))
+        data = build_metrics_data(path)
+        samples = data["scopes"]["host/telem1/C0"]["samples"]
+        self.assertEqual(samples[1][0], 3)
+        self.assertTrue(samples[1][2]["temperature_c"][2])
+        self.assertEqual(samples[-1][0], 605)
+        self.assertLessEqual(len(samples), 601)
+
     def setUp(self):
         self.temporary = tempfile.TemporaryDirectory()
         self.addCleanup(self.temporary.cleanup)
