@@ -2,7 +2,8 @@
 
 ## 0.8.0 (2026-09-30)
 
-- Merge user-facing CLI documentation into [操作指南](guide.md); `usage.md` and `offline.md` remain as pointers.
+- Merge user-facing CLI documentation into [操作指南](guide.md); remove stub `usage.md` / `offline.md`.
+- Drop `RELEASE_NOTES.md` (use this changelog and GitHub Releases); slim user package (no architecture/platform-data docs or `requirements-report.txt` in tar).
 - Make default analyze produce only decoded.csv, long-form metrics.csv and dashboard.html, plus provenance.
 - Reuse explicit adjacent-interval Core formulas; remove default multi-level views, event/statistical CSVs and Excel dependencies.
 - Add duration-seconds sampling plans and CSV-only view regeneration; retain old analysis through --legacy-analysis.

@@ -12,18 +12,16 @@ stage="${temporary}/${NAME}"
 
 mkdir -p "${stage}" "${DIST}"
 files=(
-    VERSION README.md REQUIREMENTS.md SUPPORT.md docs/guide.md docs/usage.md docs/data-format.md
-    docs/changelog.md docs/service.md
+    VERSION README.md REQUIREMENTS.md SUPPORT.md docs/guide.md docs/data-format.md
+    docs/changelog.md docs/service.md docs/compatibility.md docs/report.md
     pmt-capture src/pmt_capture_cli.py src/pmt_bulk_capture.py
-    src/pmt_analysis.py src/pmt_postprocess.py docs/offline.md docs/report.md requirements-report.txt
+    src/pmt_analysis.py src/pmt_postprocess.py
     service/run.sh service/install.sh service/uninstall.sh
     service/configs/lab-host.conf.example service/systemd/pmt-bulk-capture@.service
     service/field-kit/start-capture.sh service/field-kit/show-progress.sh
     service/field-kit/pause-capture.sh service/field-kit/resume-capture.sh service/field-kit/pack-results.sh
     service/field-kit/lib/common.sh service/field-kit/lib/schedule.sh service/field-kit/lib/run_status.py
     config/defaults.json config/metrics-gnr.json examples/capture_config.json
-    docs/architecture.md docs/platform-data.md
-    docs/compatibility.md
 )
 while IFS= read -r -d '' file; do
     files+=("${file#"${ROOT}/"}")
