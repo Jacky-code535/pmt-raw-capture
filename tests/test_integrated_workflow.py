@@ -27,7 +27,7 @@ class IntegratedWorkflowTest(unittest.TestCase):
             self.assertTrue(decode.called)
             report.assert_called_once_with(analysis, root / "analysis-report",
                                            Path(__file__).resolve().parents[1] / "config/metrics-gnr.json", None)
-            self.assertEqual(json.loads(output.call_args.args[0])["report"]["core_view"],
+            self.assertEqual(json.loads(output.call_args[0][0])["report"]["core_view"],
                              str(root / "analysis-report/逐Core看板.html"))
 
     def test_capture_pack_unpack_native_analysis_compare(self):
